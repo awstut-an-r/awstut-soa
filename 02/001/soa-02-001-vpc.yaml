@@ -134,10 +134,6 @@ Resources:
           FromPort: 3260
           ToPort: 3260
           SourceSecurityGroupId: !Ref InstanceSecurityGroup
-        - IpProtocol: icmp
-          FromPort: -1
-          ToPort: -1
-          SourceSecurityGroupId: !Ref InstanceSecurityGroup
           
   StorageGatewayEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
