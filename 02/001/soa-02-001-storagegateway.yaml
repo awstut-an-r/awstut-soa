@@ -1,0 +1,77 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: soa-02-001
+    
+  StorageGatewayLatestAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/storagegateway/ami/VTL/latest
+    
+  StorageGatewayInstanceType:
+    Type: String
+    #Default: m4.xlarge
+    Default: m4.large
+    
+  StorageGatewayInstanceEBSSize:
+    Type: Number
+    #Default: 150
+    Default: 8
+    
+    
+Resources:
+  StorageGatewayInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref StorageGatewayLatestAmiId
+      InstanceType: !Ref StorageGatewayInstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId:
+            Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet
+          GroupSet:
+            - Fn::ImportValue: !Sub ${Prefix}-StorageGatewaySecurityGroup
+            
+  StorageGatewayInstanceEBS1:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone:
+        Fn::ImportValue: !Sub ${Prefix}-AZ
+      Size: !Ref StorageGatewayInstanceEBSSize
+      VolumeType: gp3
+      
+  EBSAttachment1:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      Device: /dev/sdf
+      InstanceId: !Ref StorageGatewayInstance
+      VolumeId: !Ref StorageGatewayInstanceEBS1
+      
+  StorageGatewayInstanceEBS2:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone:
+        Fn::ImportValue: !Sub ${Prefix}-AZ
+      Size: !Ref StorageGatewayInstanceEBSSize
+      VolumeType: gp3
+      
+  EBSAttachment2:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      Device: /dev/sdg
+      InstanceId: !Ref StorageGatewayInstance
+      VolumeId: !Ref StorageGatewayInstanceEBS2
+            
+  StorageGatewayEndpoint:
+    Type: AWS::EC2::VPCEndpoint
+    Properties:
+      PrivateDnsEnabled: false
+      SecurityGroupIds:
+        - Fn::ImportValue: !Sub ${Prefix}-StorageGatewayEndpointSecurityGroup
+      ServiceName: !Sub com.amazonaws.${AWS::Region}.storagegateway
+      SubnetIds:
+        - Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet
+      VpcEndpointType: Interface
+      VpcId:
+        Fn::ImportValue: !Sub ${Prefix}-VPC
