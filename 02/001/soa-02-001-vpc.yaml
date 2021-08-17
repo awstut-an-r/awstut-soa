@@ -1,0 +1,214 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: soa-02-001
+    
+  VPCCidrBlock:
+    Type: String
+    Default: 10.0.0.0/16
+    
+  PrivateSubnetCidrBlock:
+    Type: String
+    Default: 10.0.1.0/24
+    
+  PublicSubnetCidrBlock:
+    Type: String
+    Default: 10.0.2.0/24
+
+  AZ:
+    Type: String
+    Default: ap-northeast-1a
+    
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AZ
+      CidrBlock: !Ref PrivateSubnetCidrBlock
+      VpcId: !Ref VPC
+  
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AZ
+      CidrBlock: !Ref PublicSubnetCidrBlock
+      VpcId: !Ref VPC
+      
+  IGW:
+    Type: AWS::EC2::InternetGateway
+
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+      
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+          
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+      
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  RouteToInternet:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+
+  PublicSubnetPublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  RouteToNATGateway:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+  
+  PrivateSubnetPrivateRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      RouteTableId: !Ref PrivateRouteTable
+      
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+        
+  SSMEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-SSMEndpointSecurityGroup
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+  StorageGatewaySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-StorageGatewaySecurityGroup
+      GroupDescription: Allow Storage Gateway Traffic.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 3260
+          ToPort: 3260
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+  StorageGatewayEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-StorageGatewayEndpointSecurityGroup
+      GroupDescription: Allow Storage Gateway Traffic.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 1026
+          ToPort: 1026
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 1027
+          ToPort: 1027
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 1028
+          ToPort: 1028
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 1031
+          ToPort: 1031
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+        - IpProtocol: tcp
+          FromPort: 2222
+          ToPort: 2222
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+      
+      
+Outputs:
+  VPC:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${Prefix}-VPC
+      
+  PrivateSubnet:
+    Value: !Ref PrivateSubnet
+    Export:
+      Name: !Sub ${Prefix}-PrivateSubnet
+      
+  PublicSubnet:
+    Value: !Ref PublicSubnet
+    Export:
+      Name: !Sub ${Prefix}-PublicSubnet
+  
+  InstanceSecurityGroup:
+    Value: !Ref InstanceSecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-InstanceSecurityGroup
+      
+  SSMEndpointSecurityGroup:
+    Value: !Ref SSMEndpointSecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-SSMEndpointSecurityGroup
+      
+  StorageGatewaySecurityGroup:
+    Value: !Ref StorageGatewaySecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-StorageGatewaySecurityGroup
+      
+  StorageGatewayEndpointSecurityGroup:
+    Value: !Ref StorageGatewayEndpointSecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-StorageGatewayEndpointSecurityGroup
+      
+  AZ:
+    Value: !Ref AZ
+    Export:
+      Name: !Sub ${Prefix}-AZ
