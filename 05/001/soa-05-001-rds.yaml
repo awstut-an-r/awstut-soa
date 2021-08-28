@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: soa-05-001
+
+  DBAllocatedStorage:
+    Type: Number
+    Default: 20
+    
+  DBEngine:
+    Type: String
+    Default: mysql
+    
+  DBEngineVersion:
+    Type: String
+    Default: 8.0.23
+    
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+    
+  DBName:
+    Type: String
+    Default: testdb
+    
+  DBMasterUsername:
+    Type: String
+    Default: testuser
+    
+  DBMasterUserPassword:
+    Type: String
+    Default: Passw0rd
+
+
+Resources:
+  DBInstance1:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      AvailabilityZone:
+        Fn::ImportValue: !Sub ${Prefix}-AZ1
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: dbinstance1
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      #VPCSecurityGroups:
+      
+  DBInstance2:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      AvailabilityZone:
+        Fn::ImportValue: !Sub ${Prefix}-AZ1
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: dbinstance2
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      VPCSecurityGroups:
+        - Fn::ImportValue: !Sub ${Prefix}-RDSDenySecurityGroup
+        
+  DBInstance3:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      AvailabilityZone:
+        Fn::ImportValue: !Sub ${Prefix}-AZ1
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: dbinstance3
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      VPCSecurityGroups:
+        - Fn::ImportValue: !Sub ${Prefix}-RDSAllowSecurityGroup
+        
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: dbsubnetgroup
+      DBSubnetGroupDescription: testgroup.
+      SubnetIds:
+        - Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet1
+        - Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet2
