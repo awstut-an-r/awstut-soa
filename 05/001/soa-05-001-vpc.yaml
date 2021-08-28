@@ -1,0 +1,206 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: soa-05-001
+    
+  VPCCidrBlock:
+    Type: String
+    Default: 10.0.0.0/16
+    
+  PrivateSubnetCidrBlock1:
+    Type: String
+    Default: 10.0.1.0/24
+    
+  PrivateSubnetCidrBlock2:
+    Type: String
+    Default: 10.0.2.0/24
+    
+  PublicSubnetCidrBlock:
+    Type: String
+    Default: 10.0.3.0/24
+  
+  AZ1:
+    Type: String
+    Default: ap-northeast-1a
+    
+  AZ2:
+    Type: String
+    Default: ap-northeast-1c
+
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AZ1
+      CidrBlock: !Ref PrivateSubnetCidrBlock1
+      VpcId: !Ref VPC
+      
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AZ2
+      CidrBlock: !Ref PrivateSubnetCidrBlock2
+      VpcId: !Ref VPC
+      
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AZ1
+      CidrBlock: !Ref PublicSubnetCidrBlock
+      VpcId: !Ref VPC
+      
+  IGW:
+    Type: AWS::EC2::InternetGateway
+
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+      
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+          
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref PublicSubnet
+      
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+
+  RouteToInternet:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+
+  PublicSubnetPublicRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  PrivateRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  RouteToNATGateway:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+  
+  PrivateSubnetPrivateRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+    
+  RDSDenySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-RDSDenySecurityGroup
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+      
+  RDSAllowSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-RDSAllowSecurityGroup
+      GroupDescription: Allow MySQL.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3306
+          ToPort: 3306
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+  SSMEndpointSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
+      GroupDescription: Allow HTTPS from InstanceSecurityGroup.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+          
+Outputs:
+  VPC:
+    Value: !Ref VPC
+    Export:
+      Name: !Sub ${Prefix}-VPC
+      
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+    Export:
+      Name: !Sub ${Prefix}-PrivateSubnet1
+      
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+    Export:
+      Name: !Sub ${Prefix}-PrivateSubnet2
+      
+  PublicSubnet:
+    Value: !Ref PublicSubnet
+    Export:
+      Name: !Sub ${Prefix}-PublicSubnet
+  
+  InstanceSecurityGroup:
+    Value: !Ref InstanceSecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-InstanceSecurityGroup
+      
+  RDSDenySecurityGroup:
+    Value: !Ref RDSDenySecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-RDSDenySecurityGroup
+      
+  RDSAllowSecurityGroup:
+    Value: !Ref RDSAllowSecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-RDSAllowSecurityGroup
+      
+  SSMEndpointSecurityGroup:
+    Value: !Ref SSMEndpointSecurityGroup
+    Export:
+      Name: !Sub ${Prefix}-SSMEndpointSecurityGroup
+      
+  AZ1:
+    Value: !Ref AZ1
+    Export:
+      Name: !Sub ${Prefix}-AZ1
+      
+  AZ2:
+    Value: !Ref AZ2
+    Export:
+      Name: !Sub ${Prefix}-AZ2
