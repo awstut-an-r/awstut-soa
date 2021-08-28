@@ -1,0 +1,29 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: soa-05-001
+    
+  BucketName:
+    Type: String
+    Default: flowlog-bucket
+
+
+Resources:
+  FlowLogBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+      BucketName: !Sub ${Prefix}-${BucketName}
+      
+  FlowLogToS3:
+    Type: AWS::EC2::FlowLog
+    Properties:
+      LogDestination: !GetAtt FlowLogBucket.Arn
+      LogDestinationType: s3
+      MaxAggregationInterval: 600 # default
+      ResourceId:
+        Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet1
+      ResourceType: Subnet
+      TrafficType: ALL
