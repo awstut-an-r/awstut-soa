@@ -15,7 +15,7 @@ Parameters:
 
 
 Resources:
-  Instance1:
+  Instance:
     Type: AWS::EC2::Instance
     Properties:
       IamInstanceProfile: !Ref InstanceProfile
