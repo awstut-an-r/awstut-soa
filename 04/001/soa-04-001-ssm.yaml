@@ -1,0 +1,39 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: soa-04-001
+
+
+Resources:
+  PatchBaseline:
+    Type: AWS::SSM::PatchBaseline
+    Properties:
+      ApprovalRules:
+        PatchRules:
+          - ApproveAfterDays: 7
+            ComplianceLevel: UNSPECIFIED
+            EnableNonSecurity: false
+            PatchFilterGroup:
+              PatchFilters:
+                - Key: CLASSIFICATION
+                  Values:
+                    - Security
+                - Key: SEVERITY
+                  Values:
+                    - Critical
+                    - Important
+          - ApproveAfterDays: 7
+            ComplianceLevel: UNSPECIFIED
+            EnableNonSecurity: false
+            PatchFilterGroup:
+              PatchFilters:
+                - Key: CLASSIFICATION
+                  Values:
+                    - Bugfix
+      Description: Test Patch Baseline.
+      Name: !Sub ${Prefix}-PatchBaseline
+      OperatingSystem: AMAZON_LINUX_2
+      PatchGroups:
+        - !Sub ${Prefix}-patch-group
