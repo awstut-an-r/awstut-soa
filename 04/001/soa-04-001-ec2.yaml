@@ -1,0 +1,67 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    Default: soa-04-001
+
+  InstanceType:
+    Type: String
+    Default: t3.nano
+    
+  LatestAmiId:
+    Type: String
+    Default: ami-0992fc94ca0f1415a # amzn2-ami-hvm-2.0.20210126.0-x86_64-gp2
+
+
+Resources:
+  Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref LatestAmiId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: true
+          DeviceIndex: 0
+          SubnetId:
+            Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet
+          GroupSet:
+            - Fn::ImportValue: !Sub ${Prefix}-InstanceSecurityGroup
+      Tags:
+        - Key: Patch Group
+          Value: !Sub ${Prefix}-patch-group
+            
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      Policies:
+        - PolicyName: PutPatchBaselineLog
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub
+                    - "${S3Bucket}/*"
+                    - S3Bucket:
+                        Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
