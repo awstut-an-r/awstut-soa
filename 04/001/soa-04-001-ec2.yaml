@@ -22,8 +22,7 @@ Resources:
       ImageId: !Ref LatestAmiId
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          DeviceIndex: 0
+        - DeviceIndex: 0
           SubnetId:
             Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet
           GroupSet:
