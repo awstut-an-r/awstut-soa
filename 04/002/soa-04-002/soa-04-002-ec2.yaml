@@ -3,21 +3,18 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
     
   InstanceSecurityGroup:
     Type: String
 
   InstanceType:
     Type: String
-    #Default: t3a.micro
     
   PlaybookBucketArn:
     Type: String
     
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   PrivateSubnet1:
     Type: String
@@ -36,10 +33,8 @@ Resources:
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet1
-            #Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet1
           GroupSet:
             - !Ref InstanceSecurityGroup
-            #- Fn::ImportValue: !Sub ${Prefix}-InstanceSecurityGroup
             
   Instance2:
     Type: AWS::EC2::Instance
@@ -50,9 +45,7 @@ Resources:
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet2
-            #Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet2
           GroupSet:
-            #- Fn::ImportValue: !Sub ${Prefix}-InstanceSecurityGroup
             - !Ref InstanceSecurityGroup
             
   InstanceProfile:
@@ -86,14 +79,6 @@ Resources:
                   - s3:PutObjectAcl
                   - s3:ListBucket
                 Resource:
-                  #- !Sub
-                  #  - ${S3Bucket}
-                  #  - S3Bucket:
-                  #      Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
-                  #- !Sub
-                  #  - ${S3Bucket}/*
-                  #  - S3Bucket:
-                  #      Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
                   - !Ref PlaybookBucketArn
                   - !Sub "${PlaybookBucketArn}/*"
       ManagedPolicyArns:
@@ -110,8 +95,3 @@ Outputs:
     Value: !Ref Instance2
     Export:
       Name: !Sub ${Prefix}-Instance2
-      
-  #InstancePublicDnsName:
-  #  Value: !GetAtt Instance.PublicDnsName
-  #  Export:
-  #    Name: !Sub ${Prefix}-InstancePublicDnsName
