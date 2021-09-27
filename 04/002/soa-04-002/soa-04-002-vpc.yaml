@@ -2,27 +2,21 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   AvailabilityZone1:
     Type: String
-    #Default: a
   
   AvailabilityZone2:
     Type: String
-    #Default: c
     
   CidrIp1:
     Type: String
-    #Default: 10.0.1.0/24
     
   CidrIp2:
     Type: String
-    #Default: 10.0.2.0/24
     
   CidrIp3:
     Type: String
-    #Default: 10.0.3.0/24
     
   CidrIp4:
     Type: String
-    #Default: 10.0.4.0/24
     
   HTTPSPort:
     Type: Number
@@ -35,11 +29,9 @@ Parameters:
     
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   VPCCidrBlock:
     Type: String
-    #Default: 10.0.0.0/16
 
 
 Resources:
@@ -139,10 +131,6 @@ Resources:
       GroupDescription: Allow HTTP Only.
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        #- IpProtocol: tcp
-        #  FromPort: 80
-        #  ToPort: 80
-        #  CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: !Ref HTTPSPort
           ToPort: !Ref HTTPSPort
@@ -158,7 +146,6 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref Port1
           ToPort: !Ref Port2
-          #CidrIp: 0.0.0.0/0
           SourceSecurityGroupId: !Ref ALBSecurityGroup
           
   EndpointSecurityGroup:
