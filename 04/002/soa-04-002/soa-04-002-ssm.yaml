@@ -12,19 +12,15 @@ Parameters:
     
   PlaybookFileName:
     Type: String
-    #Default: playbook.yml
     
   PlaybookPackageName:
     Type: String
-    #Default: playbook.zip
 
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   WaitForSuccessTimeoutSeconds:
     Type: Number
-    #Default: 60
     
     
 Resources:
@@ -36,9 +32,7 @@ Resources:
       OutputLocation:
         S3Location:
           OutputS3BucketName: !Ref PlaybookBucket
-            #Fn::ImportValue: !Sub ${Prefix}-S3BucketName
           OutputS3KeyPrefix: !Sub "${Prefix}/shellscript-association-log"
-          #OutputS3KeyPrefix: shellscript-association-log
       Parameters:
         commands:
           - "sudo amazon-linux-extras install ansible2 -y"
@@ -47,10 +41,7 @@ Resources:
           Values:
             - !Ref Instance1
             - !Ref Instance2
-            #- Fn::ImportValue: !Sub ${Prefix}-Instance1
-            #- Fn::ImportValue: !Sub ${Prefix}-Instance2
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-      #WaitForSuccessTimeoutSeconds: 300
         
   ApplyAnsiblePlaybooksAssociation:
     Type: AWS::SSM::Association
@@ -62,9 +53,7 @@ Resources:
       OutputLocation:
         S3Location:
           OutputS3BucketName: !Ref PlaybookBucket
-            #Fn::ImportValue: !Sub ${Prefix}-S3BucketName
           OutputS3KeyPrefix: !Sub "${Prefix}/playbook-association-log"
-          #OutputS3KeyPrefix: playbook-association-log
       Parameters:
         Check:
           - "False"
@@ -77,10 +66,6 @@ Resources:
           - !Ref PlaybookFileName
         SourceInfo:
           - !Sub '{"path": "https://${PlaybookBucket}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${PlaybookPackageName}"}'
-          #- !Sub
-          #    - '{"path": "https://${S3BucketRegionalDomainName}/${PlaybookPackageName}"}'
-          #    - S3BucketRegionalDomainName:
-          #        Fn::ImportValue: !Sub ${Prefix}-S3BucketRegionalDomainName
         SourceType:
           - S3
         Verbose:
@@ -90,6 +75,4 @@ Resources:
           Values:
             - !Ref Instance1
             - !Ref Instance2
-            #- Fn::ImportValue: !Sub ${Prefix}-Instance1
-            #- Fn::ImportValue: !Sub ${Prefix}-Instance2
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
