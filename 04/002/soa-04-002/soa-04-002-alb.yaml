@@ -12,11 +12,9 @@ Parameters:
     
   DomainName1:
     Type: String
-    #Default: awstut.net
     
   DomainName2:
     Type: String
-    #Default: awstut.link
     
   HTTPSPort:
     Type: Number
@@ -30,16 +28,13 @@ Parameters:
   # awstut.net
   Port1:
     Type: Number
-    #Default: 81
     
   # awstut.link
   Port2:
     Type: Number
-    #Default: 82
     
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   PublicSubnet1:
     Type: String
@@ -72,13 +67,10 @@ Resources:
       Name: !Sub ${Prefix}-ALB
       Scheme: internet-facing
       SecurityGroups:
-        #- Fn::ImportValue: !Sub ${Prefix}-ALBSecurityGroup
         - !Ref ALBSecurityGroup
       Subnets:
         - !Ref PublicSubnet1
         - !Ref PublicSubnet2
-        #- Fn::ImportValue: !Sub ${Prefix}-PublicSubnet1
-        #- Fn::ImportValue: !Sub ${Prefix}-PublicSubnet2
       Type: application
       
   # awstut.net
@@ -86,7 +78,6 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       VpcId: !Ref VPC
-        #Fn::ImportValue: !Sub ${Prefix}-VPC
       Name: !Sub ${Prefix}-ALBTargetGroup1
       Protocol: HTTP
       Port: !Ref Port1
@@ -101,16 +92,13 @@ Resources:
         HttpCode: !Ref HttpCode
       Targets:
         - Id: !Ref Instance1
-            #Fn::ImportValue: !Sub ${Prefix}-Instance1
         - Id: !Ref Instance2
-            #Fn::ImportValue: !Sub ${Prefix}-Instance2
             
   # awstut.link
   ALBTargetGroup2:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
       VpcId: !Ref VPC
-        #Fn::ImportValue: !Sub ${Prefix}-VPC
       Name: !Sub ${Prefix}-ALBTargetGroup2
       Protocol: HTTP
       Port: !Ref Port2
@@ -123,22 +111,17 @@ Resources:
       HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
       Targets:
         - Id: !Ref Instance1
-            #Fn::ImportValue: !Sub ${Prefix}-Instance1
         - Id: !Ref Instance2
-            #Fn::ImportValue: !Sub ${Prefix}-Instance2
         
   ALBListener:
     Type: AWS::ElasticLoadBalancingV2::Listener
     Properties: 
       Certificates:
         - CertificateArn: !Ref Certificate1
-            #Fn::ImportValue: !Sub ${Prefix}-Certificate1
       DefaultActions: 
         - TargetGroupArn: !Ref ALBTargetGroup1
           Type: forward
       LoadBalancerArn: !Ref ALB
-      #Port: 80
-      #Protocol: HTTP
       Port: !Ref HTTPSPort
       Protocol: HTTPS
       
@@ -146,10 +129,7 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
     Properties:
       Certificates:
-        #- CertificateArn: !Ref Certificate1
-        #    #Fn::ImportValue: !Sub ${Prefix}-Certificate1
         - CertificateArn: !Ref Certificate2
-            #Fn::ImportValue: !Sub ${Prefix}-Certificate2
       ListenerArn: !Ref ALBListener
       
   # awstut.net
