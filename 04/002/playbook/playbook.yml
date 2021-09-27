@@ -1,0 +1,23 @@
+- hosts: all
+  gather_facts: no
+  become: yes
+  #become_user: ec2-user
+
+  tasks:
+    - name: update yum
+      yum: name=*
+    - name: install the latest version of Apache
+      yum: name=httpd state=latest
+    - name: copy httpd.conf
+      copy:
+        src: ./httpd.conf
+        dest: /etc/httpd/conf
+        owner: root
+        group: root
+        mode: '0644'
+    - name: start and enable Apache
+      service: name=httpd state=started enabled=yes
+    - name: make index.html for awstut.net
+      shell: mkdir -p /var/www/html/awstut.net; echo 'awstut.net' > /var/www/html/awstut.net/index.html; ec2-metadata -i >> /var/www/html/awstut.net/index.html
+    - name: make index.html for awstut.link
+      shell: mkdir -p /var/www/html/awstut.link; echo 'awstut.link' > /var/www/html/awstut.link/index.html; ec2-metadata -i >> /var/www/html/awstut.link/index.html

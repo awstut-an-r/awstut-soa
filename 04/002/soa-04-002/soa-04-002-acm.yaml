@@ -1,0 +1,58 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  DomainName1:
+    Type: String
+    #Default: awstut.net
+    
+  DomainName2:
+    Type: String
+    #Default: awstut.link
+    
+  # awstut.net
+  HostedZoneId1:
+    Type: String
+    #Default: Z023054218FS37XTCMMPY
+    
+  # awstut.link
+  HostedZoneId2:
+    Type: String
+    #Default: Z10044733FFY4XKD59JBB
+    
+  Prefix:
+    Type: String
+    #Default: soa-04-002
+
+
+Resources:
+  # awstut.net
+  Certificate1:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName1
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName1
+          HostedZoneId: !Ref HostedZoneId1
+      ValidationMethod: DNS
+      
+  # awstut.link
+  Certificate2:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName2
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName2
+          HostedZoneId: !Ref HostedZoneId2
+      ValidationMethod: DNS
+
+
+Outputs:
+  Certificate1:
+    Value: !Ref Certificate1
+    Export:
+      Name: !Sub ${Prefix}-Certificate1
+      
+  Certificate2:
+    Value: !Ref Certificate2
+    Export:
+      Name: !Sub ${Prefix}-Certificate2

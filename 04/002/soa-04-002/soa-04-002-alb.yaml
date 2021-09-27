@@ -1,0 +1,190 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBSecurityGroup:
+    Type: String
+    
+  Certificate1:
+    Type: String
+    
+  Certificate2:
+    Type: String
+    
+  DomainName1:
+    Type: String
+    #Default: awstut.net
+    
+  DomainName2:
+    Type: String
+    #Default: awstut.link
+    
+  HTTPSPort:
+    Type: Number
+    
+  Instance1:
+    Type: String
+    
+  Instance2:
+    Type: String
+    
+  # awstut.net
+  Port1:
+    Type: Number
+    #Default: 81
+    
+  # awstut.link
+  Port2:
+    Type: Number
+    #Default: 82
+    
+  Prefix:
+    Type: String
+    #Default: soa-04-002
+    
+  PublicSubnet1:
+    Type: String
+    
+  PublicSubnet2:
+    Type: String
+    
+  VPC:
+    Type: String
+    
+  HealthyThresholdCount:
+    Type: Number
+    
+  UnhealthyThresholdCount:
+    Type: Number
+    
+  HealthCheckTimeoutSeconds:
+    Type: Number
+    
+  HealthCheckIntervalSeconds:
+    Type: Number
+    
+  HttpCode:
+    Type: Number
+
+Resources:
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub ${Prefix}-ALB
+      Scheme: internet-facing
+      SecurityGroups:
+        #- Fn::ImportValue: !Sub ${Prefix}-ALBSecurityGroup
+        - !Ref ALBSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+        #- Fn::ImportValue: !Sub ${Prefix}-PublicSubnet1
+        #- Fn::ImportValue: !Sub ${Prefix}-PublicSubnet2
+      Type: application
+      
+  # awstut.net
+  ALBTargetGroup1:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+        #Fn::ImportValue: !Sub ${Prefix}-VPC
+      Name: !Sub ${Prefix}-ALBTargetGroup1
+      Protocol: HTTP
+      Port: !Ref Port1
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      HealthCheckPort: traffic-port
+      HealthyThresholdCount: !Ref HealthyThresholdCount
+      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+      HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
+      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+      Matcher: 
+        HttpCode: !Ref HttpCode
+      Targets:
+        - Id: !Ref Instance1
+            #Fn::ImportValue: !Sub ${Prefix}-Instance1
+        - Id: !Ref Instance2
+            #Fn::ImportValue: !Sub ${Prefix}-Instance2
+            
+  # awstut.link
+  ALBTargetGroup2:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      VpcId: !Ref VPC
+        #Fn::ImportValue: !Sub ${Prefix}-VPC
+      Name: !Sub ${Prefix}-ALBTargetGroup2
+      Protocol: HTTP
+      Port: !Ref Port2
+      HealthCheckProtocol: HTTP
+      HealthCheckPath: /
+      HealthCheckPort: traffic-port
+      HealthyThresholdCount: !Ref HealthyThresholdCount
+      UnhealthyThresholdCount: !Ref UnhealthyThresholdCount
+      HealthCheckTimeoutSeconds: !Ref HealthCheckTimeoutSeconds
+      HealthCheckIntervalSeconds: !Ref HealthCheckIntervalSeconds
+      Targets:
+        - Id: !Ref Instance1
+            #Fn::ImportValue: !Sub ${Prefix}-Instance1
+        - Id: !Ref Instance2
+            #Fn::ImportValue: !Sub ${Prefix}-Instance2
+        
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      Certificates:
+        - CertificateArn: !Ref Certificate1
+            #Fn::ImportValue: !Sub ${Prefix}-Certificate1
+      DefaultActions: 
+        - TargetGroupArn: !Ref ALBTargetGroup1
+          Type: forward
+      LoadBalancerArn: !Ref ALB
+      #Port: 80
+      #Protocol: HTTP
+      Port: !Ref HTTPSPort
+      Protocol: HTTPS
+      
+  ALBListenerCertificates:
+    Type: AWS::ElasticLoadBalancingV2::ListenerCertificate
+    Properties:
+      Certificates:
+        #- CertificateArn: !Ref Certificate1
+        #    #Fn::ImportValue: !Sub ${Prefix}-Certificate1
+        - CertificateArn: !Ref Certificate2
+            #Fn::ImportValue: !Sub ${Prefix}-Certificate2
+      ListenerArn: !Ref ALBListener
+      
+  # awstut.net
+  ALBListenerRule1:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup1
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Ref DomainName1
+      ListenerArn: !Ref ALBListener
+      Priority: 1
+
+  # awstut.link
+  ALBListenerRule2:
+    Type: AWS::ElasticLoadBalancingV2::ListenerRule
+    Properties:
+      Actions:
+        - Type: forward
+          TargetGroupArn: !Ref ALBTargetGroup2
+      Conditions:
+        - Field: host-header
+          HostHeaderConfig:
+            Values:
+              - !Ref DomainName2
+      ListenerArn: !Ref ALBListener
+      Priority: 2
+      
+
+Outputs:
+  ALBDnsName:
+    Value: !GetAtt ALB.DNSName
+    Export:
+      Name: !Sub ${Prefix}-ALBDnsName

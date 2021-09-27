@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBDnsName:
+    Type: String
+    
+  ALBHostedZoneId:
+    Type: String
+    #Default: Z14GRHDCWA56QT
+    
+  DomainName1:
+    Type: String
+    #Default: awstut.net
+    
+  DomainName2:
+    Type: String
+    #Default: awstut.link
+    
+  HTTPSPort:
+    Type: Number
+    
+  # awstut.net
+  HostedZoneId1:
+    Type: String
+    #Default: Z023054218FS37XTCMMPY
+    
+  # awstut.link
+  HostedZoneId2:
+    Type: String
+    #Default: Z10044733FFY4XKD59JBB
+    
+  Prefix:
+    Type: String
+    #Default: soa-04-002
+  
+
+Resources:
+  DnsHealthCheck:
+    Type: AWS::Route53::HealthCheck
+    Properties:
+      HealthCheckConfig:
+        #Port: 80
+        Port: !Ref HTTPSPort
+        #Type: HTTP
+        Type: HTTPS
+        ResourcePath: /
+        FullyQualifiedDomainName: !Ref ALBDnsName
+          #Fn::ImportValue: !Sub ${Prefix}-ALBDnsName
+        RequestInterval: 30
+        FailureThreshold: 3
+        
+  # awstut.net
+  DnsRecord1:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId1
+      Name: !Ref DomainName1
+      Type: A
+      AliasTarget: 
+        DNSName: !Ref ALBDnsName
+          #Fn::ImportValue: !Sub ${Prefix}-ALBDnsName
+        HostedZoneId: !Ref ALBHostedZoneId
+        
+  # awstut.link
+  DnsRecord2:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: !Ref HostedZoneId2
+      Name: !Ref DomainName2
+      Type: A
+      AliasTarget: 
+        DNSName: !Ref ALBDnsName
+          #Fn::ImportValue: !Sub ${Prefix}-ALBDnsName
+        HostedZoneId: !Ref ALBHostedZoneId

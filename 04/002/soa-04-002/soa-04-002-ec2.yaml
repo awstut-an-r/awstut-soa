@@ -1,0 +1,117 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    
+  InstanceSecurityGroup:
+    Type: String
+
+  InstanceType:
+    Type: String
+    #Default: t3a.micro
+    
+  PlaybookBucketArn:
+    Type: String
+    
+  Prefix:
+    Type: String
+    #Default: soa-04-002
+    
+  PrivateSubnet1:
+    Type: String
+    
+  PrivateSubnet2:
+    Type: String
+    
+
+Resources:
+  Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref PrivateSubnet1
+            #Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet1
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+            #- Fn::ImportValue: !Sub ${Prefix}-InstanceSecurityGroup
+            
+  Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref PrivateSubnet2
+            #Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet2
+          GroupSet:
+            #- Fn::ImportValue: !Sub ${Prefix}-InstanceSecurityGroup
+            - !Ref InstanceSecurityGroup
+            
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+                - ssm.amazonaws.com
+      Policies:
+        - PolicyName: SSMStateManagerPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                  - s3:ListBucket
+                Resource:
+                  #- !Sub
+                  #  - ${S3Bucket}
+                  #  - S3Bucket:
+                  #      Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
+                  #- !Sub
+                  #  - ${S3Bucket}/*
+                  #  - S3Bucket:
+                  #      Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
+                  - !Ref PlaybookBucketArn
+                  - !Sub "${PlaybookBucketArn}/*"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        
+        
+Outputs:
+  Instance1:
+    Value: !Ref Instance1
+    Export:
+      Name: !Sub ${Prefix}-Instance1
+      
+  Instance2:
+    Value: !Ref Instance2
+    Export:
+      Name: !Sub ${Prefix}-Instance2
+      
+  #InstancePublicDnsName:
+  #  Value: !GetAtt Instance.PublicDnsName
+  #  Export:
+  #    Name: !Sub ${Prefix}-InstancePublicDnsName
