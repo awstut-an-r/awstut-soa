@@ -11,11 +11,11 @@ Parameters:
     
   DomainName1:
     Type: String
-    Default: [domain1]
+    Default: awstut.net
     
   DomainName2:
     Type: String
-    Default: [domain2]
+    Default: awstut.link
     
   # awstut.net
   HostedZoneId1:
