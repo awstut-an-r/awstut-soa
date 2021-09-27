@@ -3,25 +3,20 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   DomainName1:
     Type: String
-    #Default: awstut.net
     
   DomainName2:
     Type: String
-    #Default: awstut.link
     
   # awstut.net
   HostedZoneId1:
     Type: String
-    #Default: Z023054218FS37XTCMMPY
     
   # awstut.link
   HostedZoneId2:
     Type: String
-    #Default: Z10044733FFY4XKD59JBB
     
   Prefix:
     Type: String
-    #Default: soa-04-002
 
 
 Resources:
