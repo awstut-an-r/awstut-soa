@@ -31,7 +31,6 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId1
       InstanceType: !Ref InstanceType
-      #KeyName: !Ref KeyName
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet
@@ -59,7 +58,6 @@ Resources:
       IamInstanceProfile: !Ref InstanceProfile
       ImageId: !Ref ImageId2
       InstanceType: !Ref InstanceType
-      #KeyName: !Ref KeyName
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PrivateSubnet
