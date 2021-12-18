@@ -126,11 +126,6 @@ Resources:
       GroupName: !Sub ${Prefix}-InstanceSecurityGroup
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      #SecurityGroupIngress:
-      #  - IpProtocol: icmp
-      #    FromPort: -1
-      #    ToPort: -1
-      #    CidrIp: !Ref PrivateSubnetCidrBlock
         
   SSMEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -159,10 +154,6 @@ Resources:
           FromPort: !Ref iSCSIPort
           ToPort: !Ref iSCSIPort
           SourceSecurityGroupId: !Ref InstanceSecurityGroup
-        #- IpProtocol: icmp
-        #  FromPort: -1
-        #  ToPort: -1
-        #  SourceSecurityGroupId: !Ref InstanceSecurityGroup
           
   StorageGatewayEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -200,45 +191,24 @@ Resources:
 Outputs:
   VPC:
     Value: !Ref VPC
-    #Export:
-    #  Name: !Sub ${Prefix}-VPC
       
   PrivateSubnet:
     Value: !Ref PrivateSubnet
-    #Export:
-    #  Name: !Sub ${Prefix}-PrivateSubnet
       
   PublicSubnet:
     Value: !Ref PublicSubnet
-    #Export:
-    #  Name: !Sub ${Prefix}-PublicSubnet
-      
-  #PrivateRouteTable:
-  #  Value: !Ref PrivateRouteTable
-  #  Export:
-  #    Name: !Sub ${Prefix}-PrivateRouteTable
   
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-InstanceSecurityGroup
       
   SSMEndpointSecurityGroup:
     Value: !Ref SSMEndpointSecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-SSMEndpointSecurityGroup
       
   StorageGatewaySecurityGroup:
     Value: !Ref StorageGatewaySecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-StorageGatewaySecurityGroup
       
   StorageGatewayEndpointSecurityGroup:
     Value: !Ref StorageGatewayEndpointSecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-StorageGatewayEndpointSecurityGroup
       
   AZ:
     Value: !Ref AZ
-    #Export:
-    #  Name: !Sub ${Prefix}-AZ
