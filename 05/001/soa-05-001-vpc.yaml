@@ -1,35 +1,37 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  AvailabilityZone2:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  CidrIp2:
+    Type: String
+    
+  CidrIp3:
+    Type: String
+    
+  CidrIp4:
+    Type: String
+    
+  HTTPSPort:
+    Type: Number
+    
+  MySQLPort:
+    Type: Number
+    
   Prefix:
     Type: String
-    Default: soa-05-001
-    
+
   VPCCidrBlock:
     Type: String
-    Default: 10.0.0.0/16
     
-  PrivateSubnetCidrBlock1:
-    Type: String
-    Default: 10.0.1.0/24
     
-  PrivateSubnetCidrBlock2:
-    Type: String
-    Default: 10.0.2.0/24
-    
-  PublicSubnetCidrBlock:
-    Type: String
-    Default: 10.0.3.0/24
-  
-  AZ1:
-    Type: String
-    Default: ap-northeast-1a
-    
-  AZ2:
-    Type: String
-    Default: ap-northeast-1c
-
-
 Resources:
   VPC:
     Type: AWS::EC2::VPC
@@ -37,26 +39,33 @@ Resources:
       CidrBlock: !Ref VPCCidrBlock
       EnableDnsHostnames: true
       EnableDnsSupport: true
-
+      
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: !Ref AZ1
-      CidrBlock: !Ref PrivateSubnetCidrBlock1
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
       
   PrivateSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: !Ref AZ2
-      CidrBlock: !Ref PrivateSubnetCidrBlock2
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp3
       VpcId: !Ref VPC
       
-  PublicSubnet:
+  PrivateSubnet3:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: !Ref AZ1
-      CidrBlock: !Ref PublicSubnetCidrBlock
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      CidrBlock: !Ref CidrIp4
       VpcId: !Ref VPC
       
   IGW:
@@ -96,7 +105,7 @@ Resources:
     Properties:
       SubnetId: !Ref PublicSubnet
       RouteTableId: !Ref PublicRouteTable
-
+      
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -108,99 +117,84 @@ Resources:
       RouteTableId: !Ref PrivateRouteTable
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NATGateway
-  
-  PrivateSubnetPrivateRouteTableAssociation:
+      
+  PrivateSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
       SubnetId: !Ref PrivateSubnet1
       RouteTableId: !Ref PrivateRouteTable
+      
 
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
-      GroupDescription: Deny All.
-      VpcId: !Ref VPC
-    
-  RDSDenySecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub ${Prefix}-RDSDenySecurityGroup
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
       
-  RDSAllowSecurityGroup:
+  EndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-RDSAllowSecurityGroup
-      GroupDescription: Allow MySQL.
-      VpcId: !Ref VPC
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 3306
-          ToPort: 3306
-          SourceSecurityGroupId: !Ref InstanceSecurityGroup
-          
-  SSMEndpointSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupName: !Sub ${Prefix}-EndpointSecurityGroup
+      GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
       GroupDescription: Allow HTTPS from InstanceSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 443
-          ToPort: 443
+          FromPort: !Ref HTTPSPort
+          ToPort: !Ref HTTPSPort
           SourceSecurityGroupId: !Ref InstanceSecurityGroup
           
-          
-Outputs:
-  VPC:
-    Value: !Ref VPC
-    Export:
-      Name: !Sub ${Prefix}-VPC
-      
-  PrivateSubnet1:
-    Value: !Ref PrivateSubnet1
-    Export:
-      Name: !Sub ${Prefix}-PrivateSubnet1
-      
-  PrivateSubnet2:
-    Value: !Ref PrivateSubnet2
-    Export:
-      Name: !Sub ${Prefix}-PrivateSubnet2
-      
-  PublicSubnet:
-    Value: !Ref PublicSubnet
-    Export:
-      Name: !Sub ${Prefix}-PublicSubnet
-  
-  InstanceSecurityGroup:
-    Value: !Ref InstanceSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-InstanceSecurityGroup
-      
   RDSDenySecurityGroup:
-    Value: !Ref RDSDenySecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-RDSDenySecurityGroup
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-RDSDenySecurityGroup"
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
       
   RDSAllowSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-RDSAllowSecurityGroup"
+      GroupDescription: Allow MySQL.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: !Ref MySQLPort
+          ToPort: !Ref MySQLPort
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup
+          
+
+Outputs:
+  AvailabilityZone1:
+    Value: !Ref AvailabilityZone1
+    
+  AvailabilityZone2:
+    Value: !Ref AvailabilityZone2
+    
+  PrivateSubnet1:
+    Value: !Ref PrivateSubnet1
+    
+  PrivateSubnet2:
+    Value: !Ref PrivateSubnet2
+    
+  PrivateSubnet3:
+    Value: !Ref PrivateSubnet3
+    
+  InstanceSecurityGroup:
+    Value: !Ref InstanceSecurityGroup
+    
+  EndpointSecurityGroup:
+    Value: !Ref EndpointSecurityGroup
+    
+  RDSDenySecurityGroup:
+    Value: !Ref RDSDenySecurityGroup
+    
+  RDSAllowSecurityGroup:
     Value: !Ref RDSAllowSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-RDSAllowSecurityGroup
-      
-  SSMEndpointSecurityGroup:
-    Value: !Ref SSMEndpointSecurityGroup
-    Export:
-      Name: !Sub ${Prefix}-SSMEndpointSecurityGroup
-      
-  AZ1:
-    Value: !Ref AZ1
-    Export:
-      Name: !Sub ${Prefix}-AZ1
-      
-  AZ2:
-    Value: !Ref AZ2
-    Export:
-      Name: !Sub ${Prefix}-AZ2
+    
+  #PrivateRouteTable:
+  #  Value: !Ref PrivateRouteTable
+    
+  VPC:
+    Value: !Ref VPC
+    

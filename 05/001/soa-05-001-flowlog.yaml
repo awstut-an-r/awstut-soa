@@ -3,27 +3,58 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Prefix:
     Type: String
-    Default: soa-05-001
     
-  BucketName:
+  #PrivateSubnet1:
+  #  Type: String
+  
+  VPC:
     Type: String
-    Default: flowlog-bucket
 
 
 Resources:
-  FlowLogBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      AccessControl: Private
-      BucketName: !Sub ${Prefix}-${BucketName}
+  FlowLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-FlowLogGroup"
       
-  FlowLogToS3:
+  FlowLogToCloudWatchLogs:
     Type: AWS::EC2::FlowLog
+    DependsOn:
+      - FlowLogGroup
     Properties:
-      LogDestination: !GetAtt FlowLogBucket.Arn
-      LogDestinationType: s3
-      MaxAggregationInterval: 600 # default
-      ResourceId:
-        Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet1
-      ResourceType: Subnet
+      DeliverLogsPermissionArn: !GetAtt DeliverLogRole.Arn # delivering CloudWatch Logs.
+      #LogDestination: !GetAtt FlowLogBucket.Arn
+      LogDestinationType: cloud-watch-logs
+      #LogFormat: hogehoge # default
+      LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+      #MaxAggregationInterval: 600 # default
+      #ResourceId: !Ref PrivateSubnet1
+      #ResourceType: Subnet
+      ResourceId: !Ref VPC
+      ResourceType: VPC
       TrafficType: ALL
+      
+  DeliverLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - vpc-flow-logs.amazonaws.com
+      Policies:
+        - PolicyName: DeliverToCloudWatchLogPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: "*"

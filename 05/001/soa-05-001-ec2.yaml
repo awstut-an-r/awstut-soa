@@ -1,17 +1,20 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  Prefix:
-    Type: String
-    Default: soa-05-001
-    
-  LatestAmiId:
+  ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+    
+  InstanceSecurityGroup:
+    Type: String
     
   InstanceType:
     Type: String
-    Default: t3.nano
+    
+  Prefix:
+    Type: String
+    
+  PrivateSubnet1:
+    Type: String
 
 
 Resources:
@@ -19,14 +22,13 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       IamInstanceProfile: !Ref InstanceProfile
-      ImageId: !Ref LatestAmiId
+      ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
         - DeviceIndex: 0
-          SubnetId:
-            Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet1
+          SubnetId: !Ref PrivateSubnet1
           GroupSet:
-            - Fn::ImportValue: !Sub ${Prefix}-InstanceSecurityGroup
+            - !Ref InstanceSecurityGroup
       UserData: !Base64 |
         #!/bin/bash -xe
         yum update -y
