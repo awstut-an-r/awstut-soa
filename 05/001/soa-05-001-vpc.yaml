@@ -192,9 +192,6 @@ Outputs:
   RDSAllowSecurityGroup:
     Value: !Ref RDSAllowSecurityGroup
     
-  #PrivateRouteTable:
-  #  Value: !Ref PrivateRouteTable
-    
   VPC:
     Value: !Ref VPC
     
