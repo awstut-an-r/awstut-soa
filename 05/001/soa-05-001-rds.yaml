@@ -56,7 +56,6 @@ Resources:
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterUserPassword
       #VPCSecurityGroups:
-      #  - Fn::ImportValue: !Sub ${Prefix}-RDSDenySecurityGroup
       
   DBInstance2:
     Type: AWS::RDS::DBInstance
