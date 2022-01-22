@@ -67,7 +67,7 @@ Resources:
               Service:
                 - ec2.amazonaws.com
       Policies:
-        - PolicyName: PutPatchBaselineLog
+        - PolicyName: MyPatchBaselinePolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
