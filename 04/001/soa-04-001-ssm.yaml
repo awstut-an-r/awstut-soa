@@ -58,7 +58,7 @@ Resources:
       OutputLocation:
         S3Location:
           OutputS3BucketName: !Ref S3BucketName
-          OutputS3KeyPrefix: !Sub "AWSRunPatchBaselineAssociation"
+          OutputS3KeyPrefix: AWSRunPatchBaselineAssociation
       Parameters:
         Operation:
           - Install
