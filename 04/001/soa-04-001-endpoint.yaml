@@ -41,18 +41,6 @@ Resources:
         - !Ref PrivateSubnet
       VpcEndpointType: Interface
       VpcId: !Ref VPC
-        
-  SSMMessagesEndpoint:
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      PrivateDnsEnabled: true
-      SecurityGroupIds:
-        - !Ref EndpointSecurityGroup
-      ServiceName: !Sub "com.amazonaws.${AWS::Region}.ssmmessages"
-      SubnetIds:
-        - !Ref PrivateSubnet
-      VpcEndpointType: Interface
-      VpcId: !Ref VPC
       
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
