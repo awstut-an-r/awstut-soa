@@ -5,10 +5,6 @@ Parameters:
     Type: String
     Default: awstut-bucket
     
-  #AvailabilityZone:
-  #  Type: String
-  #  Default: a
-    
   Prefix:
     Type: String
     Default: soa-04-003
@@ -30,40 +26,19 @@ Resources:
         AvailabilityZone: a
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
-        #HTTPSPort: 443
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
-        
-  #EndpointStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
-  #    Parameters:
-  #      EndpointSecurityGroup: !GetAtt VPCStack.Outputs.EndpointSecurityGroup
-  #      Prefix: !Ref Prefix
-  #      PrivateRouteTable: !GetAtt VPCStack.Outputs.PrivateRouteTable
-  #      PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
-  #      VPC: !GetAtt VPCStack.Outputs.VPC
 
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - VPCStack
-      #- EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
-        #ImageId2: /aws/service/ami-windows-latest/Windows_Server-2019-Japanese-Full-Base
-        #ImageId: ami-0427ff21031d224a8 # amzn2-ami-hvm-2.0.20211001.1-arm64-gp2
         ImageId: ami-0a97fa4f13841e34e # Windows_Server-2019-English-Full-Base-2021.12.15
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        #InstanceType1: t2.nano
         InstanceType: t3a.small
-        #InstanceType: t4g.nano
         KeyName: MyKeyPair
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
