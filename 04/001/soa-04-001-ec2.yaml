@@ -1,35 +1,55 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  Prefix:
+  ImageId:
     Type: String
-    Default: soa-04-001
+    
+  InstanceSecurityGroup:
+    Type: String
 
   InstanceType:
     Type: String
-    Default: t3.nano
     
-  LatestAmiId:
+  Prefix:
     Type: String
-    Default: ami-0992fc94ca0f1415a # amzn2-ami-hvm-2.0.20210126.0-x86_64-gp2
+
+  PrivateSubnet:
+    Type: String
+    
+  S3BucketArn:
+    Type: String
 
 
 Resources:
-  Instance:
+  Instance1:
     Type: AWS::EC2::Instance
     Properties:
       IamInstanceProfile: !Ref InstanceProfile
-      ImageId: !Ref LatestAmiId
+      ImageId: !Ref ImageId
       InstanceType: !Ref InstanceType
       NetworkInterfaces:
         - DeviceIndex: 0
-          SubnetId:
-            Fn::ImportValue: !Sub ${Prefix}-PrivateSubnet
+          SubnetId: !Ref PrivateSubnet
           GroupSet:
-            - Fn::ImportValue: !Sub ${Prefix}-InstanceSecurityGroup
+            - !Ref InstanceSecurityGroup
+      #Tags:
+      #  - Key: patch-group
+      #    Value: !Sub "${Prefix}-patch-group-1"
+          
+  Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref PrivateSubnet
+          GroupSet:
+            - !Ref InstanceSecurityGroup
       Tags:
         - Key: Patch Group
-          Value: !Sub ${Prefix}-patch-group
+          Value: !Sub "${Prefix}-patch-group"
             
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
@@ -58,9 +78,26 @@ Resources:
                 Action:
                   - s3:PutObject
                 Resource:
-                  - !Sub
-                    - "${S3Bucket}/*"
-                    - S3Bucket:
-                        Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
+                  - !Sub "${S3BucketArn}/*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub "arn:aws:s3:::aws-windows-downloads-${AWS::Region}/*"
+                  - !Sub "arn:aws:s3:::amazon-ssm-${AWS::Region}/*"
+                  - !Sub "arn:aws:s3:::amazon-ssm-packages-${AWS::Region}/*"
+                  - !Sub "arn:aws:s3:::${AWS::Region}-birdwatcher-prod/*"
+                  - !Sub "arn:aws:s3:::aws-ssm-document-attachments-${AWS::Region}/*"
+                  - !Sub "arn:aws:s3:::patch-baseline-snapshot-${AWS::Region}/*"
+                  - !Sub "arn:aws:s3:::aws-ssm-${AWS::Region}/*"
+                  - !Sub "arn:aws:s3:::aws-patchmanager-macos-${AWS::Region}/*"
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+        
+        
+Outputs:
+  Instance1:
+    Value: !Ref Instance1
+    
+  Instance2:
+    Value: !Ref Instance2

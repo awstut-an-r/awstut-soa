@@ -1,13 +1,24 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  Instance1:
+    Type: String
+    
+  Instance2:
+    Type: String
+
   Prefix:
     Type: String
-    Default: soa-04-001
+    
+  S3BucketName:
+    Type: String
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
 
 
 Resources:
-  PatchBaseline:
+  MyPatchBaseline:
     Type: AWS::SSM::PatchBaseline
     Properties:
       ApprovalRules:
@@ -23,17 +34,37 @@ Resources:
                 - Key: SEVERITY
                   Values:
                     - Critical
-                    - Important
-          - ApproveAfterDays: 7
-            ComplianceLevel: UNSPECIFIED
-            EnableNonSecurity: false
-            PatchFilterGroup:
-              PatchFilters:
-                - Key: CLASSIFICATION
-                  Values:
-                    - Bugfix
+                    #- Important
+          #- ApproveAfterDays: 7
+          #  ComplianceLevel: UNSPECIFIED
+          #  EnableNonSecurity: false
+          #  PatchFilterGroup:
+          #    PatchFilters:
+          #      - Key: CLASSIFICATION
+          #        Values:
+          #          - Bugfix
       Description: Test Patch Baseline.
-      Name: !Sub ${Prefix}-PatchBaseline
+      Name: !Sub ${Prefix}-MyPatchBaseline
       OperatingSystem: AMAZON_LINUX_2
       PatchGroups:
         - !Sub ${Prefix}-patch-group
+        
+        
+  AWSRunPatchBaselineAssociation:
+    Type: AWS::SSM::Association
+    Properties:
+      AssociationName: !Sub "${Prefix}-AWSRunPatchBaselineAssociation"
+      Name: AWS-RunPatchBaseline
+      OutputLocation:
+        S3Location:
+          OutputS3BucketName: !Ref S3BucketName
+          OutputS3KeyPrefix: !Sub "AWSRunPatchBaselineAssociation"
+      Parameters:
+        Operation:
+          - Install
+      Targets:
+        - Key: InstanceIds
+          Values:
+            - !Ref Instance1
+            - !Ref Instance2
+      WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds

@@ -17,5 +17,6 @@ Resources:
 Outputs:
   S3BucketArn:
     Value: !GetAtt S3Bucket.Arn
-    Export:
-      Name: !Sub ${Prefix}-S3BucketArn
+    
+  S3BucketName:
+    Value: !Ref S3Bucket
