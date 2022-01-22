@@ -36,9 +36,6 @@ Resources:
           SubnetId: !Ref PrivateSubnet
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #Tags:
-      #  - Key: patch-group
-      #    Value: !Sub "${Prefix}-patch-group-1"
           
   Instance2:
     Type: AWS::EC2::Instance
