@@ -3,13 +3,9 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   EndpointSecurityGroup:
     Type: String
-
-  #PlaybookBucketArn:
-  #  Type: String
     
   Prefix:
     Type: String
-    #Default: soa-04-002
     
   PrivateRouteTable:
     Type: String
@@ -28,40 +24,10 @@ Resources:
   S3Endpoint:
     Type: AWS::EC2::VPCEndpoint
     Properties:
-      #PolicyDocument:
-      #  Version: 2012-10-17
-      #  Statement:
-      #    - Effect: Allow
-      #      Principal: '*'
-      #      Action:
-      #        - s3:GetObject
-      #      Resource:
-      #        - !Sub arn:aws:s3:::amazonlinux.${AWS::Region}.amazonaws.com/*
-      #        - !Sub arn:aws:s3:::amazonlinux-2-repos-${AWS::Region}/*
-      #    - Effect: Allow
-      #      Principal: '*'
-      #      Action:
-      #        - s3:*
-      #        #- s3:PutObject
-      #        #- s3:PutObjectAcl
-      #        #- s3:ListBucket
-      #      Resource:
-      #        #- !Sub
-      #        #  - ${S3Bucket}
-      #        #  - S3Bucket:
-      #        #      Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
-      #        #- !Sub
-      #        #  - ${S3Bucket}/*
-      #        #  - S3Bucket:
-      #        #      Fn::ImportValue: !Sub ${Prefix}-S3BucketArn
-      #        - !Ref PlaybookBucketArn
-      #        - !Sub "${PlaybookBucketArn}/*"
-      #        
       RouteTableIds:
         - !Ref PrivateRouteTable
       ServiceName: !Sub "com.amazonaws.${AWS::Region}.s3"
       VpcId: !Ref VPC
-        
         
   SSMEndpoint:
     Type: AWS::EC2::VPCEndpoint
