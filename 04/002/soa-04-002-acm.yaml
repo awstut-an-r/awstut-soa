@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  DomainName1:
+    Type: String
+    
+  DomainName2:
+    Type: String
+    
+  # domain1
+  HostedZoneId1:
+    Type: String
+    
+  # domain2
+  HostedZoneId2:
+    Type: String
+    
+  Prefix:
+    Type: String
+
+
+Resources:
+  # domain1
+  Certificate1:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName1
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName1
+          HostedZoneId: !Ref HostedZoneId1
+      ValidationMethod: DNS
+      
+  # domain2
+  Certificate2:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName2
+      DomainValidationOptions:
+        - DomainName: !Ref DomainName2
+          HostedZoneId: !Ref HostedZoneId2
+      ValidationMethod: DNS
+
+
+Outputs:
+  Certificate1:
+    Value: !Ref Certificate1
+      
+  Certificate2:
+    Value: !Ref Certificate2
