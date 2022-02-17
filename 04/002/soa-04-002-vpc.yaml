@@ -133,10 +133,6 @@ Resources:
       GroupDescription: Allow HTTPS Only.
       VpcId: !Ref VPC
       SecurityGroupIngress:
-        #- IpProtocol: tcp
-        #  FromPort: 80
-        #  ToPort: 80
-        #  CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: !Ref HTTPSPort
           ToPort: !Ref HTTPSPort
@@ -152,7 +148,6 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref Port1
           ToPort: !Ref Port2
-          #CidrIp: 0.0.0.0/0
           SourceSecurityGroupId: !Ref ALBSecurityGroup
           
   EndpointSecurityGroup:
