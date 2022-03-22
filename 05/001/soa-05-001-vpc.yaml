@@ -13,12 +13,6 @@ Parameters:
   CidrIp2:
     Type: String
     
-  #CidrIp3:
-  #  Type: String
-  #  
-  #CidrIp4:
-  #  Type: String
-    
   HTTPSPort:
     Type: Number
     
@@ -40,13 +34,6 @@ Resources:
       EnableDnsHostnames: true
       EnableDnsSupport: true
       
-  #PublicSubnet:
-  #  Type: AWS::EC2::Subnet
-  #  Properties:
-  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
-  #    CidrBlock: !Ref CidrIp1
-  #    VpcId: !Ref VPC
-      
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -61,62 +48,10 @@ Resources:
       CidrBlock: !Ref CidrIp2
       VpcId: !Ref VPC
       
-  #PrivateSubnet3:
-  #  Type: AWS::EC2::Subnet
-  #  Properties:
-  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
-  #    CidrBlock: !Ref CidrIp4
-  #    VpcId: !Ref VPC
-      
-  #IGW:
-  #  Type: AWS::EC2::InternetGateway
-#
-  #IGWAttachment:
-  #  Type: AWS::EC2::VPCGatewayAttachment
-  #  Properties:
-  #    VpcId: !Ref VPC
-  #    InternetGatewayId: !Ref IGW
-  #    
-  #EIP:
-  #  Type: AWS::EC2::EIP
-  #  Properties:
-  #    Domain: vpc
-  #        
-  #NATGateway:
-  #  Type: AWS::EC2::NatGateway
-  #  Properties:
-  #    AllocationId: !GetAtt EIP.AllocationId
-  #    SubnetId: !Ref PublicSubnet
-  #    
-  #PublicRouteTable:
-  #  Type: AWS::EC2::RouteTable
-  #  Properties:
-  #    VpcId: !Ref VPC
-#
-  #RouteToInternet:
-  #  Type: AWS::EC2::Route
-  #  Properties:
-  #    RouteTableId: !Ref PublicRouteTable
-  #    DestinationCidrBlock: 0.0.0.0/0
-  #    GatewayId: !Ref IGW
-#
-  #PublicSubnetPublicRouteTableAssociation:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref PublicSubnet
-  #    RouteTableId: !Ref PublicRouteTable
-      
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
-      
-  #RouteToNATGateway:
-  #  Type: AWS::EC2::Route
-  #  Properties:
-  #    RouteTableId: !Ref PrivateRouteTable
-  #    DestinationCidrBlock: 0.0.0.0/0
-  #    NatGatewayId: !Ref NATGateway
       
   PrivateSubnetRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
@@ -165,20 +100,11 @@ Resources:
           
 
 Outputs:
-  #AvailabilityZone1:
-  #  Value: !Ref AvailabilityZone1
-  #  
-  #AvailabilityZone2:
-  #  Value: !Ref AvailabilityZone2
-    
   PrivateSubnet1:
     Value: !Ref PrivateSubnet1
     
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
-    
-  #PrivateSubnet3:
-  #  Value: !Ref PrivateSubnet3
   
   PrivateRouteTable:
     Value: !Ref PrivateRouteTable
