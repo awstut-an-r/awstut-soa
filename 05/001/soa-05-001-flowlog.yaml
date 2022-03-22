@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  #PrivateSubnet1:
+  #  Type: String
+  
+  VPC:
+    Type: String
+
+
+Resources:
+  FlowLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+      
+  FlowLogToCloudWatchLogs:
+    Type: AWS::EC2::FlowLog
+    DependsOn:
+      - FlowLogGroup
+    Properties:
+      DeliverLogsPermissionArn: !GetAtt DeliverLogRole.Arn # delivering CloudWatch Logs.
+      #LogDestination: !GetAtt FlowLogBucket.Arn
+      LogDestinationType: cloud-watch-logs
+      #LogFormat: hogehoge # default
+      LogGroupName: !Sub "${Prefix}-FlowLogGroup"
+      #MaxAggregationInterval: 600 # default
+      #ResourceId: !Ref PrivateSubnet1
+      #ResourceType: Subnet
+      ResourceId: !Ref VPC
+      ResourceType: VPC
+      TrafficType: ALL
+      
+  DeliverLogRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - vpc-flow-logs.amazonaws.com
+      Policies:
+        - PolicyName: DeliverToCloudWatchLogPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - logs:DescribeLogGroups
+                  - logs:DescribeLogStreams
+                Resource: "*"

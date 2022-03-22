@@ -1,0 +1,100 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone:
+    Type: String
+    
+  DBAllocatedStorage:
+    Type: Number
+    
+  DBEngine:
+    Type: String
+    
+  DBEngineVersion:
+    Type: String
+    
+  DBInstanceClass:
+    Type: String
+    
+  DBName:
+    Type: String
+    
+  DBMasterUsername:
+    Type: String
+    
+  DBMasterUserPassword:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  PrivateSubnet1:
+    Type: String
+    
+  PrivateSubnet2:
+    Type: String
+    
+  RDSDenySecurityGroup:
+    Type: String
+    
+  RDSAllowSecurityGroup:
+    Type: String
+
+
+Resources:
+  #DBInstance1:
+  #  Type: AWS::RDS::DBInstance
+  #  Properties:
+  #    AllocatedStorage: !Ref DBAllocatedStorage
+  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+  #    DBInstanceClass: !Ref DBInstanceClass
+  #    DBInstanceIdentifier: dbinstance1
+  #    DBName: !Ref DBName
+  #    DBSubnetGroupName: !Ref DBSubnetGroup
+  #    Engine: !Ref DBEngine
+  #    EngineVersion: !Ref DBEngineVersion
+  #    MasterUsername: !Ref DBMasterUsername
+  #    MasterUserPassword: !Ref DBMasterUserPassword
+  #    #VPCSecurityGroups:
+  #    #  - Fn::ImportValue: !Sub ${Prefix}-RDSDenySecurityGroup
+  #    
+  #DBInstance2:
+  #  Type: AWS::RDS::DBInstance
+  #  Properties:
+  #    AllocatedStorage: !Ref DBAllocatedStorage
+  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+  #    DBInstanceClass: !Ref DBInstanceClass
+  #    DBInstanceIdentifier: dbinstance2
+  #    DBName: !Ref DBName
+  #    DBSubnetGroupName: !Ref DBSubnetGroup
+  #    Engine: !Ref DBEngine
+  #    EngineVersion: !Ref DBEngineVersion
+  #    MasterUsername: !Ref DBMasterUsername
+  #    MasterUserPassword: !Ref DBMasterUserPassword
+  #    VPCSecurityGroups:
+  #      - !Ref RDSDenySecurityGroup
+        
+  DBInstance3:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: !Ref DBAllocatedStorage
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
+      DBInstanceClass: !Ref DBInstanceClass
+      DBInstanceIdentifier: dbinstance3
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !Ref DBEngine
+      EngineVersion: !Ref DBEngineVersion
+      MasterUsername: !Ref DBMasterUsername
+      MasterUserPassword: !Ref DBMasterUserPassword
+      VPCSecurityGroups:
+        - !Ref RDSAllowSecurityGroup
+        
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupName: dbsubnetgroup
+      DBSubnetGroupDescription: testgroup.
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
