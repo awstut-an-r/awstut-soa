@@ -3,9 +3,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Prefix:
     Type: String
-    
-  #PrivateSubnet1:
-  #  Type: String
   
   VPC:
     Type: String
@@ -23,13 +20,8 @@ Resources:
       - FlowLogGroup
     Properties:
       DeliverLogsPermissionArn: !GetAtt DeliverLogRole.Arn # delivering CloudWatch Logs.
-      #LogDestination: !GetAtt FlowLogBucket.Arn
       LogDestinationType: cloud-watch-logs
-      #LogFormat: hogehoge # default
       LogGroupName: !Sub "${Prefix}-FlowLogGroup"
-      #MaxAggregationInterval: 600 # default
-      #ResourceId: !Ref PrivateSubnet1
-      #ResourceType: Subnet
       ResourceId: !Ref VPC
       ResourceType: VPC
       TrafficType: ALL
