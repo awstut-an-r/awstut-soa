@@ -20,9 +20,6 @@ Resources:
           Name: !Sub "${Prefix}-RateRestrictionRule"
           Priority: 0
           Statement:
-            #GeoMatchStatement:
-            #  CountryCodes:
-            #    - JP
             RateBasedStatement:
               AggregateKeyType: IP
               Limit: !Ref Limit
@@ -59,12 +56,6 @@ Resources:
         CloudWatchMetricsEnabled: true
         MetricName: !Ref Prefix
         SampledRequestsEnabled: true
-        
-  #WebACLAssociation:
-  #  Type: AWS::WAFv2::WebACLAssociation
-  #  Properties: 
-  #    ResourceArn: !Ref ALBArn
-  #    WebACLArn: !GetAtt WebACL.Arn
   
   
 Outputs:
