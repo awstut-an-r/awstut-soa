@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: soa-05-002
+    
+  Region:
+    Type: String
+    Default: ap-northeast-1
+    
+  Limit:
+    Type: Number
+    Default: 100
+    
+    
+Resources:
+  WAFStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-waf.yaml"
+      Parameters:
+        Limit: !Ref Limit
+        Prefix: !Ref Prefix
+        
+  S3Stack1:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-s3-01.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  CloudFrontStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-cloudfront.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        BucketRegionalDomainName: !GetAtt S3Stack1.Outputs.BucketRegionalDomainName
+        Prefix: !Ref Prefix
+        WebACLArn: !GetAtt WAFStack.Outputs.WebACLArn
+        
+  S3Stack2:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - CloudFrontStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-s3-02.yaml"
+      Parameters:
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        OAI: !GetAtt CloudFrontStack.Outputs.OAI
+        
+  LambdaStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - S3Stack1
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
+      Parameters:
+        BucketArn: !GetAtt S3Stack1.Outputs.BucketArn
+        BucketName: !GetAtt S3Stack1.Outputs.BucketName
+        Handler: index.lambda_handler
+        Prefix: !Ref Prefix
+        Runtime: python3.8
+        
+  CustomResourceStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - LambdaStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-customresource.yaml"
+      Parameters:
+        FunctionArn: !GetAtt LambdaStack.Outputs.FunctionArn
+        
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone: a
+        CidrIp1: 10.0.1.0/24
+        CidrIp2: 10.0.2.0/24
+        #HTTPPort: 80
+        #HTTPSPort: 443
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+        InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceType: t4g.nano
+        Prefix: !Ref Prefix
+        PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
