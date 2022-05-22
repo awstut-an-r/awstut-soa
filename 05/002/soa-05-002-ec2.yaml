@@ -16,12 +16,6 @@ Parameters:
   PrivateSubnet:
     Type: String
     
-  #PrivateSubnet2:
-  #  Type: String
-    
-  #UserData:
-  #  Type: String
-    
 
 Resources:
   Instance:
@@ -39,20 +33,6 @@ Resources:
           #!/bin/bash -xe
           yum update -y
           yum install -y httpd
-        
-            
-  #Instance2:
-  #  Type: AWS::EC2::Instance
-  #  Properties:
-  #    IamInstanceProfile: !Ref InstanceProfile
-  #    ImageId: !Ref ImageId
-  #    InstanceType: !Ref InstanceType
-  #    NetworkInterfaces:
-  #      - DeviceIndex: 0
-  #        SubnetId: !Ref PrivateSubnet2
-  #        GroupSet:
-  #          - !Ref InstanceSecurityGroup
-  #    #UserData: !Ref UserData
 
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
