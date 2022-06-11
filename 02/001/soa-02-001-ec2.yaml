@@ -34,7 +34,6 @@ Resources:
         yum update -y
         yum install -y iscsi-initiator-utils
         yum install -y mt-st
-        #curl -OL http://mirror.centos.org/centos/7/os/x86_64/Packages/mtx-1.3.12-14.el7.x86_64.rpm; yum install -y mtx-1.3.12-14.el7.x86_64.rpm
         yum install -y mtx
             
   InstanceProfile:
@@ -57,4 +56,3 @@ Resources:
                 - ec2.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-        #- arn:aws:iam::aws:policy/AWSStorageGatewayFullAccess
