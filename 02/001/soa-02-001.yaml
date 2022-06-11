@@ -52,20 +52,11 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
         ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
-        #InstanceType: t3a.micro
         InstanceType: t4g.nano
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
-        #UserData: !Base64 |
-        #  #!/bin/bash -xe
-        #  yum update -y
-        #  yum install -y httpd
-        #  systemctl start httpd
-        #  systemctl enable httpd
-        #  ec2-metadata -i > /var/www/html/index.html
         
   StorageGatewayStack:
     Type: AWS::CloudFormation::Stack
@@ -77,7 +68,6 @@ Resources:
         AZ: !GetAtt VPCStack.Outputs.AZ
         EBSSize: 8
         ImageId: /aws/service/storagegateway/ami/VTL/latest
-        #InstanceType: m4.large
         InstanceType: m5a.xlarge
         Prefix: !Ref Prefix
         PrivateSubnet: !GetAtt VPCStack.Outputs.PrivateSubnet
