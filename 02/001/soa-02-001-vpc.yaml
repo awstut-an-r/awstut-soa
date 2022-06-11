@@ -62,58 +62,12 @@ Resources:
       AvailabilityZone: !Ref AZ
       CidrBlock: !Ref CidrBlock2
       VpcId: !Ref VPC
-  
-      
-  #IGW:
-  #  Type: AWS::EC2::InternetGateway
-  
-  #IGWAttachment:
-  #  Type: AWS::EC2::VPCGatewayAttachment
-  #  Properties:
-  #    VpcId: !Ref VPC
-  #    InternetGatewayId: !Ref IGW
-      
-  #EIP:
-  #  Type: AWS::EC2::EIP
-  #  Properties:
-  #    Domain: vpc
-  #        
-  #NATGateway:
-  #  Type: AWS::EC2::NatGateway
-  #  Properties:
-  #    AllocationId: !GetAtt EIP.AllocationId
-  #    SubnetId: !Ref PublicSubnet
-      
-  #PublicRouteTable:
-  #  Type: AWS::EC2::RouteTable
-  #  Properties:
-  #    VpcId: !Ref VPC
-  
-  #RouteToInternet:
-  #  Type: AWS::EC2::Route
-  #  Properties:
-  #    RouteTableId: !Ref PublicRouteTable
-  #    DestinationCidrBlock: 0.0.0.0/0
-  #    GatewayId: !Ref IGW
-
-  #PublicSubnetPublicRouteTableAssociation:
-  #  Type: AWS::EC2::SubnetRouteTableAssociation
-  #  Properties:
-  #    SubnetId: !Ref PublicSubnet
-  #    RouteTableId: !Ref PublicRouteTable
 
   PrivateRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
-      
-  #RouteToNATGateway:
-  #  Type: AWS::EC2::Route
-  #  Properties:
-  #    RouteTableId: !Ref PrivateRouteTable
-  #    DestinationCidrBlock: 0.0.0.0/0
-  #    NatGatewayId: !Ref NATGateway
-  #
+
   PrivateSubnetPrivateRouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -123,19 +77,14 @@ Resources:
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-InstanceSecurityGroup
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
       GroupDescription: Deny All.
       VpcId: !Ref VPC
-      #SecurityGroupIngress:
-      #  - IpProtocol: icmp
-      #    FromPort: -1
-      #    ToPort: -1
-      #    CidrIp: !Ref PrivateSubnetCidrBlock
         
   SSMEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-SSMEndpointSecurityGroup
+      GroupName: !Sub "${Prefix}-SSMEndpointSecurityGroup"
       GroupDescription: Allow HTTPS from InstanceSecurityGroup.
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -147,7 +96,7 @@ Resources:
   StorageGatewaySecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupName: !Sub ${Prefix}-StorageGatewaySecurityGroup
+      GroupName: !Sub "${Prefix}-StorageGatewaySecurityGroup"
       GroupDescription: Allow Storage Gateway Traffic.
       VpcId: !Ref VPC
       SecurityGroupIngress:
@@ -159,10 +108,6 @@ Resources:
           FromPort: !Ref iSCSIPort
           ToPort: !Ref iSCSIPort
           SourceSecurityGroupId: !Ref InstanceSecurityGroup
-        #- IpProtocol: icmp
-        #  FromPort: -1
-        #  ToPort: -1
-        #  SourceSecurityGroupId: !Ref InstanceSecurityGroup
           
   StorageGatewayEndpointSecurityGroup:
     Type: AWS::EC2::SecurityGroup
@@ -174,83 +119,53 @@ Resources:
         - IpProtocol: tcp
           FromPort: !Ref HTTPSPort
           ToPort: !Ref HTTPSPort
-          #SourceSecurityGroupId: !Ref InstanceSecurityGroup
           SourceSecurityGroupId: !Ref StorageGatewaySecurityGroup
         - IpProtocol: tcp
           FromPort: !Ref StorageGatewayPort1
           ToPort: !Ref StorageGatewayPort1
-          #SourceSecurityGroupId: !Ref InstanceSecurityGroup
           SourceSecurityGroupId: !Ref StorageGatewaySecurityGroup
         - IpProtocol: tcp
           FromPort: !Ref StorageGatewayPort2
           ToPort: !Ref StorageGatewayPort2
-          #SourceSecurityGroupId: !Ref InstanceSecurityGroup
           SourceSecurityGroupId: !Ref StorageGatewaySecurityGroup
         - IpProtocol: tcp
           FromPort: !Ref StorageGatewayPort3
           ToPort: !Ref StorageGatewayPort3
-          #SourceSecurityGroupId: !Ref InstanceSecurityGroup
           SourceSecurityGroupId: !Ref StorageGatewaySecurityGroup
         - IpProtocol: tcp
           FromPort: !Ref StorageGatewayPort4
           ToPort: !Ref StorageGatewayPort4
-          #SourceSecurityGroupId: !Ref InstanceSecurityGroup
           SourceSecurityGroupId: !Ref StorageGatewaySecurityGroup
         - IpProtocol: tcp
           FromPort: !Ref StorageGatewayPort5
           ToPort: !Ref StorageGatewayPort5
-          #SourceSecurityGroupId: !Ref InstanceSecurityGroup
           SourceSecurityGroupId: !Ref StorageGatewaySecurityGroup
-        #- IpProtocol: tcp
-        #  FromPort: 0
-        #  ToPort: 65535
-        #  #SourceSecurityGroupId: !Ref InstanceSecurityGroup
-        #  #SourceSecurityGroupId: !Ref StorageGatewaySecurityGroup
-        #  CidrIp: 0.0.0.0/0
       
       
 Outputs:
   VPC:
     Value: !Ref VPC
-    #Export:
-    #  Name: !Sub ${Prefix}-VPC
       
   PrivateSubnet:
     Value: !Ref PrivateSubnet
-    #Export:
-    #  Name: !Sub ${Prefix}-PrivateSubnet
       
   PublicSubnet:
     Value: !Ref PublicSubnet
-    #Export:
-    #  Name: !Sub ${Prefix}-PublicSubnet
       
   PrivateRouteTable:
     Value: !Ref PrivateRouteTable
-  #  Export:
-  #    Name: !Sub ${Prefix}-PrivateRouteTable
   
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-InstanceSecurityGroup
       
   SSMEndpointSecurityGroup:
     Value: !Ref SSMEndpointSecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-SSMEndpointSecurityGroup
       
   StorageGatewaySecurityGroup:
     Value: !Ref StorageGatewaySecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-StorageGatewaySecurityGroup
       
   StorageGatewayEndpointSecurityGroup:
     Value: !Ref StorageGatewayEndpointSecurityGroup
-    #Export:
-    #  Name: !Sub ${Prefix}-StorageGatewayEndpointSecurityGroup
       
   AZ:
     Value: !Ref AZ
-    #Export:
-    #  Name: !Sub ${Prefix}-AZ
