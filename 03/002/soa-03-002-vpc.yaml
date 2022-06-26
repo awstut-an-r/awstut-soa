@@ -15,10 +15,7 @@ Parameters:
     
   CidrIp3:
     Type: String
-    
-  #HTTPSPort:
-  #  Type: Number
-    
+
   NFSPort:
     Type: Number
     
@@ -143,18 +140,6 @@ Resources:
           ToPort: !Ref NFSPort
           SourceSecurityGroupId: !Ref InstanceSecurityGroup
           
-  #EndpointSecurityGroup:
-  #  Type: AWS::EC2::SecurityGroup
-  #  Properties:
-  #    GroupName: !Sub "${Prefix}-EndpointSecurityGroup"
-  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup.
-  #    VpcId: !Ref VPC
-  #    SecurityGroupIngress:
-  #      - IpProtocol: tcp
-  #        FromPort: !Ref HTTPSPort
-  #        ToPort: !Ref HTTPSPort
-  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup
-          
           
 Outputs:
   VPC:
@@ -165,15 +150,9 @@ Outputs:
     
   PrivateSubnet2:
     Value: !Ref PrivateSubnet2
-    
-  #PrivateRouteTable:
-  #  Value: !Ref PrivateRouteTable
-    
+
   InstanceSecurityGroup:
     Value: !Ref InstanceSecurityGroup
     
   EFSSecurityGroup:
     Value: !Ref EFSSecurityGroup
-      
-  #EndpointSecurityGroup:
-  #  Value: !Ref EndpointSecurityGroup
