@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Function1:
+    Type: String
+    
+  FunctionArn1:
+    Type: String
+    
+  Function2:
+    Type: String
+    
+  FunctionArn2:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  Rule1:
+    Type: AWS::Events::Rule
+    Properties: 
+      #Description: String
+      #EventBusName: String
+      #EventPattern: Json
+      Name: !Sub "${Prefix}-EventsRule1"
+      #RoleArn: !GetAtt EventsRuleRole.Arn
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref FunctionArn1
+          Id: !Ref Function1
+          #RoleArn: !GetAtt EventsRuleRole.Arn
+          
+  #EventsRuleRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service: events.amazonaws.com
+  #    Policies:
+  #      - PolicyName: !Sub "${Prefix}-InvokeFunctionPolicy"
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action: lambda:InvokeFunction
+  #              Resource: !Ref FunctionArn1
+  
+  EventsRulePermission1: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref Function1
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt Rule1.Arn
+                  
+                  
+  Rule2:
+    Type: AWS::Events::Rule
+    Properties: 
+      #Description: String
+      #EventBusName: String
+      #EventPattern: Json
+      Name: !Sub "${Prefix}-EventsRule2"
+      #RoleArn: EventsRuleRole
+      ScheduleExpression: cron(* * * * ? *)
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref FunctionArn2
+          Id: !Ref Function2
+          
+  EventsRulePermission2: 
+    Type: AWS::Lambda::Permission
+    Properties: 
+      FunctionName: !Ref Function2
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt Rule2.Arn
