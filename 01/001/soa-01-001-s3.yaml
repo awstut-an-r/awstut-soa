@@ -1,12 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketTagKey:
-  #  Type: String
-  #  
-  #BucketTagValue:
-  #  Type: String
-
   Prefix:
     Type: String
     
@@ -15,30 +9,6 @@ Parameters:
     
 
 Resources:
-  #Bucket:
-  #  Type: AWS::S3::Bucket
-  #  Properties:
-  #    BucketName: !Sub "${Prefix}-logging-enable"
-  #    AccessControl: Private
-  #    BucketEncryption:
-  #      ServerSideEncryptionConfiguration:
-  #        BucketKeyEnabled: true
-  #    #LoggingConfiguration:
-  #    #  DestinationBucketName: !Ref LogBucket
-  #    #  LogFilePrefix: bucket1-log
-      
-  #Bucket2:
-  #  Type: AWS::S3::Bucket
-  #  Properties:
-  #    BucketName: !Sub "${Prefix}-logging-disable"
-  #    AccessControl: Private
-      
-  #LogBucket:
-  #  Type: AWS::S3::Bucket
-  #  Properties:
-  #    BucketName: !Sub "${Prefix}-log-bucket"
-  #    AccessControl: LogDeliveryWrite
-      
   ConfigBucket:
     Type: AWS::S3::Bucket
     Properties:
@@ -84,23 +54,11 @@ Resources:
       AccessControl: Private
       BucketEncryption:
         ServerSideEncryptionConfiguration:
-          #- BucketKeyEnabled: true
           - ServerSideEncryptionByDefault:
               SSEAlgorithm: !Ref SSEAlgorithm
-      #Tags:
-      #  - Key: !Ref BucketTagKey
-      #    Value: !Ref BucketTagValue
+
 
 Outputs:
-  #Bucket1:
-  #  Value: !Ref Bucket1
-  #  
-  #Bucket2:
-  #  Value: !Ref Bucket2
-  #  
-  #LogBucket:
-  #  Value: !Ref LogBucket
-  
   ConfigBucket:
     Value: !Ref ConfigBucket
     
