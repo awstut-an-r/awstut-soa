@@ -1,0 +1,168 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BucketTagKey:
+  #  Type: String
+  #  
+  #BucketTagValue:
+  #  Type: String
+
+  #Bucket1:
+  #  Type: String
+  
+  #Bucket2:
+  #  Type: String
+  
+  #LogBucket:
+  #  Type: String
+  
+  ConfigBucket:
+    Type: String
+
+  Prefix:
+    Type: String
+    
+  SSEAlgorithm:
+    Type: String
+    
+  TestBucket:
+    Type: String
+    
+  #TopicArn:
+  #  Type: String
+    
+
+Resources:
+  DeliveryChannel:
+    Type: AWS::Config::DeliveryChannel
+    Properties: 
+      #ConfigSnapshotDeliveryProperties: 
+      #  ConfigSnapshotDeliveryProperties
+      Name: !Sub "${Prefix}-DeliveryChannel"
+      S3BucketName: !Ref ConfigBucket
+      #S3KeyPrefix: aws-config
+      #S3KmsKeyArn: String
+      #SnsTopicARN: !Ref TopicArn
+      
+  ConfigurationRecorder:
+    Type: AWS::Config::ConfigurationRecorder
+    Properties: 
+      Name: !Sub "${Prefix}-ConfigurationRecorder"
+      RecordingGroup: 
+        AllSupported: false
+        IncludeGlobalResourceTypes: false
+        ResourceTypes: 
+          - AWS::S3::Bucket
+      #RoleARN: !GetAtt ConfigRole.Arn
+      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/config.amazonaws.com/${AWSServiceRoleForConfig}"
+        
+  AWSServiceRoleForConfig:
+    Type: AWS::IAM::ServiceLinkedRole
+    DeletionPolicy: Delete
+    Properties: 
+      AWSServiceName: config.amazonaws.com
+      #CustomSuffix: String
+      #Description: String
+  
+  #ConfigRole:
+  #  Type: AWS::IAM::Role
+  #  DeletionPolicy: Delete
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - config.amazonaws.com
+  #    ManagedPolicyArns:
+  #      - arn:aws:iam::aws:policy/service-role/AWS_ConfigRole
+  #    Policies:
+  #      - PolicyName: SNSPublishPolicy
+  #        PolicyDocument:
+  #          Version: 2012-10-17
+  #          Statement:
+  #            - Effect: Allow
+  #              Action:
+  #                - sns:Publish
+  #              Resource:
+  #                - !Ref TopicArn
+        
+  S3BucketSSEEnabledConfigRule:
+    Type: AWS::Config::ConfigRule
+    DependsOn:
+      - ConfigurationRecorder
+    Properties: 
+      ConfigRuleName: !Sub "${Prefix}-S3-Bucket-SSE-Enabled"
+      #Description: String
+      #InputParameters: Json
+      #MaximumExecutionFrequency: String
+      Scope: 
+        ComplianceResourceId: !Ref TestBucket
+        ComplianceResourceTypes: 
+          - AWS::S3::Bucket
+        #TagKey: !Ref BucketTagKey
+        #TagValue: !Ref BucketTagValue
+      Source: 
+        #CustomPolicyDetails: 
+        #  CustomPolicyDetails
+        Owner: AWS
+        #SourceDetails: 
+        #  - SourceDetail
+        SourceIdentifier: S3_BUCKET_SERVER_SIDE_ENCRYPTION_ENABLED
+  
+  RemediationConfiguration:
+    Type: AWS::Config::RemediationConfiguration
+    Properties: 
+      Automatic: true
+      ConfigRuleName: !Ref S3BucketSSEEnabledConfigRule
+      #ExecutionControls: 
+      #  ExecutionControls
+      MaximumAutomaticAttempts: 5
+      Parameters:
+        BucketName:
+          ResourceValue:
+            Value: RESOURCE_ID
+        SSEAlgorithm:
+          StaticValue:
+            Values:
+              - !Ref SSEAlgorithm
+        AutomationAssumeRole:
+          StaticValue:
+            Values:
+              - !GetAtt RemediationConfigurationRole.Arn
+      ResourceType: AWS::S3::Bucket
+      RetryAttemptSeconds: 60
+      TargetId: AWS-EnableS3BucketEncryption
+      TargetType: SSM_DOCUMENT
+      TargetVersion: "1"
+      
+  RemediationConfigurationRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+      Policies:
+        - PolicyName: S3PutSSEPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutEncryptionConfiguration
+                Resource:
+                  - !Sub "arn:aws:s3:::${TestBucket}"
+        
+        
+#Outputs:
+#  S3BucketSSEEnabledConfigRule:
+#    #Value: !GetAtt S3BucketSSEEnabledConfigRule.ConfigRuleId
+#    Value: !Ref S3BucketSSEEnabledConfigRule
