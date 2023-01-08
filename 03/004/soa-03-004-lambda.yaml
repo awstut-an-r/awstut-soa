@@ -45,4 +45,3 @@ Resources:
   #    FunctionName: !Ref Function
   #    Action: lambda:InvokeFunction
   #    Principal: s3.amazonaws.com
-  #    #SourceArn: !Ref SNSTopicArn
