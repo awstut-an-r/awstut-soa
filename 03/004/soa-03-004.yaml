@@ -5,7 +5,7 @@ Description: A sample EC2 instance template for testing change sets.
 Parameters:
   TemplateBucketName:
     Type: String
-    Default: awstut-bucket
+    Default: [bucket-name]
     
   Prefix:
     Type: String
