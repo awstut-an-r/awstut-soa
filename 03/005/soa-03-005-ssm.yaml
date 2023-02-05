@@ -4,15 +4,6 @@ Parameters:
   AccountId:
     Type: String
 
-  #BucketName:
-  #  Type: String
-  
-  #CreateImageRoleArn:
-  #  Type: String
-    
-  #Instance:
-  #  Type: String
-    
   Prefix:
     Type: String
     
@@ -30,11 +21,8 @@ Resources:
   CreateAndShareAmiRunbook:
     Type: AWS::SSM::Document
     Properties: 
-      #Attachments: 
-      #  - AttachmentsSource
       Content:
         assumeRole: "{{AutomationAssumeRole}}"
-        #description: Run a script on Linux instances.
         description: Create and Share AMI with another account.
         schemaVersion: "0.3"
         parameters:
@@ -46,10 +34,6 @@ Resources:
             type: String
             description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
             default: ""
-          #Commands:
-          #  type: String
-          #  description: (Required) The commands to run or the path to an existing script on the instance.
-          #  default: echo Hello World
           InstanceId:
             type: String
             description: (Required) The instance ID you want to run commands on.
@@ -71,10 +55,6 @@ Resources:
               - Name: AmiStringList
                 Selector: "$"
                 Type: String
-              #- Name: Platform
-              #  Selector: "$.Reservations[0].Instances[0].Platform"
-              #  Type: String
-            #nextStep: shareAmiWithAnotherAccount
             
           - name: convertStringListToString
             action: "aws:executeScript"
@@ -104,52 +84,27 @@ Resources:
               LaunchPermission:
                 Add:
                   - UserId: "{{AccountId}}"
-            #outputs: # These are user-specified outputs
-            #- Name: The name for a user-specified output key
-            #  Selector: A response object specified by using jsonpath format
-            #  Type: The data type
       DocumentFormat: YAML
       DocumentType: Automation
       Name: !Sub "${Prefix}-CreateAndShareAmiRunbook"
-      #Requires: 
-      #  - DocumentRequires
-      #Tags: 
-      #  - Tag
       TargetType: /AWS::EC2::Instance
-      #UpdateMethod: String
-      #VersionName: String
 
   CreateAndShareAmiRunbookAssociation:
     Type: AWS::SSM::Association
     Properties:
       AssociationName: !Sub "${Prefix}-CreateAndShareAmiRunbookAssociation"
       AutomationTargetParameterName: InstanceId
-      #Name: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${CreateAndShareAMIRunbook}"
       Name: !Ref CreateAndShareAmiRunbook
-      #OutputLocation:
-      #  S3Location:
-      #    OutputS3BucketName: !Ref BucketName
-      #    OutputS3KeyPrefix: MyRunbookAssociation/
       Parameters:
         AccountId:
           - !Ref AccountId
         AutomationAssumeRole:
           - !GetAtt CreateAndShareAmiRunbookRole.Arn
-          #- !Ref CreateImageRoleArn
-        #Commands:
-        #  - "echo Hello World"
         InstanceId:
           - "{{RESOURCE_ID}}"
-          #- !Ref Instance
-        #NoReboot:
-        #  - "false"
       Targets:
-        #- Key: InstanceIds
-        #  Values:
-        #    - !Ref Instance1
         - Key: !Sub "tag:${TagKey}"
           Values:
-            #- !Ref Instance1
             - !Ref TagValue
       WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
       
@@ -174,7 +129,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- "*"
                   - ec2:CreateImage
                   - ec2:DescribeInstances
                   - ec2:ModifyImageAttribute
