@@ -55,7 +55,6 @@ Resources:
               - Name: AmiStringList
                 Selector: "$"
                 Type: String
-            
           - name: convertStringListToString
             action: "aws:executeScript"
             inputs:
@@ -72,7 +71,6 @@ Resources:
               - Name: Ami
                 Selector: $.Payload.First
                 Type: String
-          
           - name: shareAmiWithAnotherAccount
             action: aws:executeAwsApi
             maxAttempts: 1
