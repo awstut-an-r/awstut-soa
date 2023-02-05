@@ -56,7 +56,7 @@ Resources:
                 Selector: "$"
                 Type: String
           - name: convertStringListToString
-            action: "aws:executeScript"
+            action: aws:executeScript
             inputs:
               Runtime: python3.8
               Handler: handler
