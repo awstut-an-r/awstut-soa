@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  DeviceNameSuffix:
+    Type: String
+    
+  Instance:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  VolumeSize:
+    Type: Number
+    
+  VolumeType:
+    Type: String
+
+
+Resources:
+  EBS:
+    Type: AWS::EC2::Volume
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}" 
+      Size: !Ref VolumeSize
+      VolumeType: !Ref VolumeType
+      
+  EBSAttachment:
+    Type: AWS::EC2::VolumeAttachment
+    Properties:
+      Device: !Sub "/dev/sd${DeviceNameSuffix}"
+      InstanceId: !Ref Instance
+      VolumeId: !Ref EBS

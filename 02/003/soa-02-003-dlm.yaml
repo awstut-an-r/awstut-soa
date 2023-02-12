@@ -1,0 +1,210 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  DLMTagKey:
+    Type: String
+    
+  DLMTagAmiValue:
+    Type: String
+  
+  DLMTagEbsValue:
+    Type: String
+  
+  DLMTagInstanceValue:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  AmiLifecyclePolicy:
+    Type: AWS::DLM::LifecyclePolicy
+    Properties: 
+      Description: !Sub "${Prefix}-LifecyclePolicy-AMI"
+      ExecutionRoleArn: !GetAtt AWSDataLifecycleManagerDefaultRoleForAMIManagement.Arn
+      PolicyDetails: 
+        #Actions: 
+        #  - Action
+        #EventSource:
+        #  EventSource
+        Parameters: 
+          NoReboot: false
+        PolicyType: IMAGE_MANAGEMENT
+        #ResourceLocations: 
+        #  - CLOUD
+        ResourceTypes: 
+          - INSTANCE
+        Schedules: 
+            #ArchiveRule: 
+            #  ArchiveRule
+            #CopyTags: Boolean
+          - CreateRule: 
+              #CronExpression: String
+              Interval: 1
+              IntervalUnit: HOURS
+              #Location: String
+              #Times: 
+              #  - String
+            #CrossRegionCopyRules: 
+            #  - CrossRegionCopyRule
+            DeprecateRule: # AMI only.
+              Count: 1
+              #Interval: Integer
+              #IntervalUnit: String
+            #FastRestoreRule: # snapshot policy only
+            #  FastRestoreRule
+            Name: test-ami-policy
+            RetainRule: 
+              Count: 2
+              #Interval: Integer
+              #IntervalUnit: String
+            #ShareRules: # snapshot policy only
+            #  - ShareRule
+            #TagsToAdd: 
+            #  - Tag
+            #VariableTags: 
+            #  - Tag
+        TargetTags: 
+          - Key: !Ref DLMTagKey
+            Value: !Ref DLMTagAmiValue
+      State: ENABLED
+      #Tags: 
+      #  - Tag
+      
+  EBSLifecyclePolicy:
+    Type: AWS::DLM::LifecyclePolicy
+    Properties: 
+      Description: !Sub "${Prefix}-LifecyclePolicy-EBS"
+      ExecutionRoleArn: !GetAtt AWSDataLifecycleManagerDefaultRole.Arn
+      PolicyDetails: 
+        #Actions: 
+        #  - Action
+        #EventSource:
+        #  EventSource
+        #Parameters: 
+        #  NoReboot: false
+        PolicyType: EBS_SNAPSHOT_MANAGEMENT
+        #ResourceLocations: 
+        #  - CLOUD
+        ResourceTypes: 
+          - VOLUME
+        Schedules: 
+            #ArchiveRule: 
+            #  ArchiveRule
+            #CopyTags: Boolean
+          - CreateRule: 
+              #CronExpression: String
+              Interval: 1
+              IntervalUnit: HOURS
+              #Location: String
+              #Times: 
+              #  - String
+            #CrossRegionCopyRules: 
+            #  - CrossRegionCopyRule
+            #DeprecateRule: # AMI only.
+            #  Count: 1
+            #  #Interval: Integer
+            #  #IntervalUnit: String
+            #FastRestoreRule: # snapshot policy only
+            #  FastRestoreRule
+            Name: test-ami-policy
+            RetainRule: 
+              Count: 2
+              #Interval: Integer
+              #IntervalUnit: String
+            #ShareRules: # snapshot policy only
+            #  - ShareRule
+            #TagsToAdd: 
+            #  - Tag
+            #VariableTags: 
+            #  - Tag
+        TargetTags: 
+          - Key: !Ref DLMTagKey
+            Value: !Ref DLMTagEbsValue
+      State: ENABLED
+      #Tags: 
+      #  - Tag
+      
+  InstanceLifecyclePolicy:
+    Type: AWS::DLM::LifecyclePolicy
+    Properties: 
+      Description: !Sub "${Prefix}-LifecyclePolicy-Instance"
+      ExecutionRoleArn: !GetAtt AWSDataLifecycleManagerDefaultRole.Arn
+      PolicyDetails: 
+        #Actions: 
+        #  - Action
+        #EventSource:
+        #  EventSource
+        Parameters: 
+          ExcludeBootVolume: false
+        PolicyType: EBS_SNAPSHOT_MANAGEMENT
+        #ResourceLocations: 
+        #  - CLOUD
+        ResourceTypes: 
+          - INSTANCE
+        Schedules: 
+            #ArchiveRule: 
+            #  ArchiveRule
+            #CopyTags: Boolean
+          - CreateRule: 
+              #CronExpression: String
+              Interval: 1
+              IntervalUnit: HOURS
+              #Location: String
+              #Times: 
+              #  - String
+            #CrossRegionCopyRules: 
+            #  - CrossRegionCopyRule
+            #DeprecateRule: # AMI only.
+            #  Count: 1
+            #  #Interval: Integer
+            #  #IntervalUnit: String
+            #FastRestoreRule: # snapshot policy only
+            #  FastRestoreRule
+            Name: test-ami-policy
+            RetainRule: 
+              Count: 2
+              #Interval: Integer
+              #IntervalUnit: String
+            #ShareRules: # snapshot policy only
+            #  - ShareRule
+            #TagsToAdd: 
+            #  - Tag
+            #VariableTags: 
+            #  - Tag
+        TargetTags: 
+          - Key: !Ref DLMTagKey
+            Value: !Ref DLMTagInstanceValue
+      State: ENABLED
+      #Tags: 
+      #  - Tag
+        
+  AWSDataLifecycleManagerDefaultRoleForAMIManagement:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - dlm.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSDataLifecycleManagerServiceRoleForAMIManagement
+        
+  AWSDataLifecycleManagerDefaultRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - dlm.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSDataLifecycleManagerServiceRole
+        

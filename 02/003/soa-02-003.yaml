@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: soa-02-003
+    
+  AvailabilityZone1:
+    Type: String
+    Default: a
+    
+  DLMTagKey:
+    Type: String
+    Default: dlm
+    
+  DLMTagAmiValue:
+    Type: String
+    Default: ami
+    
+  DLMTagEbsValue:
+    Type: String
+    Default: ebs
+    
+  DLMTagInstanceValue:
+    Type: String
+    Default: instance
+    
+  ImageId:
+    Type: String
+    Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
+    
+  InstanceType:
+    Type: String
+    Default: t4g.nano
+
+
+Resources:
+  VPCStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        CidrIp1: 10.0.1.0/24
+        #CidrIp2: 10.0.2.0/24
+        #CidrIp3: 10.0.3.0/24
+        #HTTPSPort: !Ref HTTPSPort
+        #MySQLPort: !Ref MySQLPort
+        Prefix: !Ref Prefix
+        VPCCidrBlock: 10.0.0.0/16
+        
+  EC2Stack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - VPCStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
+      Parameters:
+        #ImageId: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2
+        ImageId: !Ref ImageId
+        #InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
+        InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
+        InstanceType: !Ref InstanceType
+        Prefix: !Ref Prefix
+        
+  EBSStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EC2Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ebs.yaml"
+      Parameters:
+        AvailabilityZone1: !Ref AvailabilityZone1
+        DeviceNameSuffix: f
+        Instance: !GetAtt EC2Stack.Outputs.Instance
+        Prefix: !Ref Prefix
+        VolumeSize: 1
+        VolumeType: gp3
+        
+  DLMStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - EBSStack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-dlm.yaml"
+      Parameters:
+        DLMTagKey: !Ref DLMTagKey
+        DLMTagAmiValue: !Ref DLMTagAmiValue
+        DLMTagEbsValue: !Ref DLMTagEbsValue
+        DLMTagInstanceValue: !Ref DLMTagInstanceValue
+        Prefix: !Ref Prefix
