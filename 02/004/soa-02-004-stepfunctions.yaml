@@ -111,3 +111,11 @@ Resources:
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
                 Resource: "*"
+                
+                
+Outputs:
+  StateMachineArn:
+    Value: !Ref StateMachine
+    
+  StateMachineName:
+    Value: !GetAtt StateMachine.Name
