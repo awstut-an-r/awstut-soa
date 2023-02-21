@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  StateMachineArn:
+    Type: String
+    
+  StateMachineName:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  Rule:
+    Type: AWS::Events::Rule
+    Properties: 
+      Name: !Sub "${Prefix}-EventsRule"
+      ScheduleExpression: rate(1 hour)
+      State: ENABLED
+      Targets: 
+        - Arn: !Ref StateMachineArn
+          Id: !Ref StateMachineName
+          RoleArn: !GetAtt EventsRuleRole.Arn
+          
+  EventsRuleRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: events.amazonaws.com
+      Policies:
+        - PolicyName: !Sub "${Prefix}-StartStateMachineExecutionPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: states:StartExecution
+                Resource: !Ref StateMachineArn
