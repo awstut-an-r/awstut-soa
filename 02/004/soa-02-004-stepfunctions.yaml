@@ -1,0 +1,136 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Function1Arn:
+    Type: String
+    
+  Function2Arn:
+    Type: String
+    
+  Function3Arn:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  ValidHours:
+    Type: Number
+  
+    
+Resources:
+  StateMachine:
+    Type: AWS::StepFunctions::StateMachine
+    Properties:
+      Definition:
+        Comment: !Sub "${Prefix}-StateMachine"
+        StartAt: ListExpiredImagesState
+        States:
+          ListExpiredImagesState:
+            Type: Task
+            Resource: !Ref Function1Arn
+            Parameters:
+              valid_hours: !Ref ValidHours
+            ResultPath: $.images
+            #OutputPath: $.numbers
+            Next: DeleteImageMapState
+            #End: true
+          DeleteImageMapState:
+            Type: Map
+            MaxConcurrency: 1
+            InputPath: $.images
+            #ItemsPath: $
+            ItemSelector:
+              describe-image.$: $$.Map.Item.Value
+            ItemProcessor:
+              ProcessorConfig:
+                Mode: INLINE
+              StartAt: DeleteImageState
+              States:
+                DeleteImageState:
+                  Type: Task
+                  Resource: !Ref Function2Arn
+                  #Parameters:
+                  #  number.$: $.number-origin
+                  InputPath: $.describe-image
+                  ResultPath: $.delete-image
+                  Next: DeleteSnapshotState
+                  #End: true
+                DeleteSnapshotState:
+                  Type: Task
+                  Resource: !Ref Function3Arn
+                  InputPath: $.describe-image
+                  ResultPath: $.delete-snapshots
+                  #Parameters:
+                  #  number.$: $.number-squared
+                  End: true
+            End: true
+      LoggingConfiguration:
+        Destinations:
+          - CloudWatchLogsLogGroup:
+              LogGroupArn: !GetAtt LogGroup.Arn
+        IncludeExecutionData: true
+        Level: ALL
+      RoleArn: !GetAtt StateMachineRole.Arn
+      StateMachineName: !Ref Prefix
+      StateMachineType: STANDARD
+      #TracingConfiguration:
+        
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties: 
+      LogGroupName: !Sub "${Prefix}-StateMachineLogGroup"
+      
+  StateMachineRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - states.amazonaws.com
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-InvokeTaskFunctions"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                Resource:
+                  - !Ref Function1Arn
+                  - !Ref Function2Arn
+                  - !Ref Function3Arn
+        - PolicyName: !Sub "${Prefix}-DeliverToCloudWatchLogPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogDelivery
+                  - logs:GetLogDelivery
+                  - logs:UpdateLogDelivery
+                  - logs:DeleteLogDelivery
+                  - logs:ListLogDeliveries
+                  - logs:PutLogEvents
+                  - logs:PutResourcePolicy
+                  - logs:DescribeResourcePolicies
+                  - logs:DescribeLogGroups
+                #Resource: !GetAtt LogGroup.Arn
+                Resource: "*"
+                #Resource: !Sub
+                #  - "${LogGroupArn}:*"
+                #  - LogGroupArn: !GetAtt LogGroup.Arn
+                
+                
+#Outputs:
+#  StateMachineArn:
+#    Value: !Ref StateMachine
+#    
+#  StateMachineName:
+#    Value: !GetAtt StateMachine.Name

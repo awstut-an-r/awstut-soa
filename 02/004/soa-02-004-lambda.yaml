@@ -1,0 +1,245 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Handler:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  #ValidHours:
+  #  Type: Number
+
+
+Resources:
+  #Function1:
+  #  Type: AWS::Lambda::Function
+  #  Properties:
+  #    Code:
+  #      ZipFile: |
+  #        import datetime
+  #        import json
+  #      
+  #        def lambda_handler(event, context):
+  #          now = datetime.datetime.now()
+  #          now_str = now.strftime('%Y-%m-%d %H:%M:%S')
+  #        
+  #          num_list = range(10)
+  #          print(num_list)
+  #          
+  #          return json.dumps({
+  #            'datetime': now_str,
+  #            'numbers': num_list
+  #          })
+  #    FunctionName: !Sub "${Prefix}-function-01"
+  #    Handler: !Ref Handler
+  #    Runtime: !Ref Runtime
+  #    Role: !GetAtt FunctionRole.Arn
+      
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import datetime
+          import os
+          
+          ACCOUNT_ID = os.environ['ACCOUNT_ID']
+          REGION_NAME = os.environ['REGION_NAME']
+          #VALID_HOURS = int(os.environ['VALID_HOURS'])
+          
+          client = boto3.client('ec2', region_name=REGION_NAME)
+          
+          def lambda_handler(event, context):
+            valid_hours = event['valid_hours']
+          
+            now = datetime.datetime.now(datetime.timezone.utc)
+          
+            response = client.describe_images(
+              Owners=[ACCOUNT_ID])
+            #print(response)
+            
+            expired_images = []
+            for image in response['Images']:
+              #print(image['ImageId'])
+              #print(image['CreationDate'])
+              
+              creation_date_str = image['CreationDate']
+              creation_date_dt = datetime.datetime.fromisoformat(creation_date_str.replace('Z', '+00:00'))
+              
+              diff = now - creation_date_dt
+              diff_hour = diff.seconds / (60 * 60)
+              
+              #if diff_hour > VALID_HOURS:
+              if diff_hour > valid_hours:
+                #image_ids.append(image['ImageId'])
+                expired_images.append(image)
+                
+            return expired_images
+      Environment:
+        Variables:
+          ACCOUNT_ID: !Ref AWS::AccountId
+          REGION_NAME: !Ref AWS::Region
+          #VALID_HOURS: !Ref ValidHours
+      FunctionName: !Sub "${Prefix}-function-01"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole1.Arn
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          
+          REGION_NAME = os.environ['REGION_NAME']
+          
+          client = boto3.client('ec2', region_name=REGION_NAME)
+        
+          def lambda_handler(event, context):
+            image_id = event['ImageId']
+            deregister_image_response = client.deregister_image(
+              ImageId=image_id,
+              #DryRun=True
+            )
+            #deregister_image_response = {'hoge': 'fuga'}
+            print(deregister_image_response)
+            
+            return deregister_image_response
+      Environment:
+        Variables:
+          REGION_NAME: !Ref AWS::Region
+      FunctionName: !Sub "${Prefix}-function-02"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole2.Arn
+      
+  Function3:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          
+          REGION_NAME = os.environ['REGION_NAME']
+          
+          client = boto3.client('ec2', region_name=REGION_NAME)
+        
+          def lambda_handler(event, context):
+            image_id = event['ImageId']
+          
+            responses = []
+            for block_device in event['BlockDeviceMappings']:
+              snapshot_id = block_device['Ebs']['SnapshotId']
+              delete_snapshot_response = client.delete_snapshot(
+                SnapshotId=snapshot_id,
+                #DryRun=True
+              )
+              print(delete_snapshot_response)
+              responses.append(delete_snapshot_response)
+            
+            #responses = [{str(i): i} for i in range(10)]
+              
+            return responses
+      Environment:
+        Variables:
+          REGION_NAME: !Ref AWS::Region
+      FunctionName: !Sub "${Prefix}-function-03"
+      Handler: !Ref Handler
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole3.Arn
+      
+  FunctionRole1:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DescribeImagesPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- ec2:DeleteSnapshot
+                  #- ec2:DeregisterImage
+                  - ec2:DescribeImages
+                Resource: "*"
+        
+  FunctionRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DeleteImagePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- ec2:DeleteSnapshot
+                  - ec2:DeregisterImage
+                  #- ec2:DescribeImages
+                Resource: "*"
+                
+  FunctionRole3:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-DeleteSnapshotPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ec2:DeleteSnapshot
+                  #- ec2:DeregisterImage
+                  #- ec2:DescribeImages
+                Resource: "*"
+      
+Outputs:
+  Function1Arn:
+    Value: !GetAtt Function1.Arn
+
+  Function2Arn:
+    Value: !GetAtt Function2.Arn
+    
+  Function3Arn:
+    Value: !GetAtt Function3.Arn
