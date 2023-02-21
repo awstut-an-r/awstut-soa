@@ -31,14 +31,11 @@ Resources:
             Parameters:
               valid_hours: !Ref ValidHours
             ResultPath: $.images
-            #OutputPath: $.numbers
             Next: DeleteImageMapState
-            #End: true
           DeleteImageMapState:
             Type: Map
             MaxConcurrency: 1
             InputPath: $.images
-            #ItemsPath: $
             ItemSelector:
               describe-image.$: $$.Map.Item.Value
             ItemProcessor:
@@ -49,19 +46,14 @@ Resources:
                 DeleteImageState:
                   Type: Task
                   Resource: !Ref Function2Arn
-                  #Parameters:
-                  #  number.$: $.number-origin
                   InputPath: $.describe-image
                   ResultPath: $.delete-image
                   Next: DeleteSnapshotState
-                  #End: true
                 DeleteSnapshotState:
                   Type: Task
                   Resource: !Ref Function3Arn
                   InputPath: $.describe-image
                   ResultPath: $.delete-snapshots
-                  #Parameters:
-                  #  number.$: $.number-squared
                   End: true
             End: true
       LoggingConfiguration:
@@ -73,7 +65,6 @@ Resources:
       RoleArn: !GetAtt StateMachineRole.Arn
       StateMachineName: !Ref Prefix
       StateMachineType: STANDARD
-      #TracingConfiguration:
         
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -92,8 +83,6 @@ Resources:
             Principal:
               Service:
                 - states.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: !Sub "${Prefix}-InvokeTaskFunctions"
           PolicyDocument:
@@ -121,16 +110,4 @@ Resources:
                   - logs:PutResourcePolicy
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
-                #Resource: !GetAtt LogGroup.Arn
                 Resource: "*"
-                #Resource: !Sub
-                #  - "${LogGroupArn}:*"
-                #  - LogGroupArn: !GetAtt LogGroup.Arn
-                
-                
-#Outputs:
-#  StateMachineArn:
-#    Value: !Ref StateMachine
-#    
-#  StateMachineName:
-#    Value: !GetAtt StateMachine.Name
