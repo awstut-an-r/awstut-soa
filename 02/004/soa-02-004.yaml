@@ -43,3 +43,12 @@ Resources:
         Function3Arn: !GetAtt LambdaStack.Outputs.Function3Arn
         Prefix: !Ref Prefix
         ValidHours: !Ref ValidHours
+        
+  EventBridgeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
+      Parameters:
+        StateMachineArn: !GetAtt StepFunctionsStack.Outputs.StateMachineArn
+        StateMachineName: !GetAtt StepFunctionsStack.Outputs.StateMachineName
+        Prefix: !Ref Prefix
