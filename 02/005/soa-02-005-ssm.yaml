@@ -20,8 +20,6 @@ Resources:
   DeleteImageRunbook:
     Type: AWS::SSM::Document
     Properties: 
-      #Attachments: 
-      #  - AttachmentsSource
       Content:
         assumeRole: "{{AutomationAssumeRole}}"
         description: Create an AMI for an EC2 instance with a specific tag.
@@ -31,14 +29,6 @@ Resources:
             type: String
             description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
             default: !GetAtt DeleteImageRunbookRole.Arn
-          #Commands:
-          #  type: String
-          #  description: (Required) The commands to run or the path to an existing script on the instance.
-          #  default: echo Hello World
-          #InstanceId:
-          #  type: String
-          #  description: (Required) The instance ID you want to run commands on.
-          #  default: ""
           AccountId:
             type: String
             description: (Required) The ID of Account.
@@ -89,8 +79,7 @@ Resources:
                 
                   response = client.describe_images(
                     Owners=[account_id])
-                
-                  #expired_images = []
+
                   create_tags_results = []
                   for image in response['Images']:
                     creation_date_str = image['CreationDate']
@@ -100,7 +89,6 @@ Resources:
                     diff_hour = diff.seconds / (60 * 60)
                     
                     if diff_hour > valid_hours:
-                      #expired_images.append(image)
                       result = client.create_tags(
                         Resources=[
                           image['ImageId']],
@@ -124,11 +112,6 @@ Resources:
             onFailure: Abort
             inputs:
               DocumentName: AWS-DeleteImage
-              #RuntimeParameters:
-              #  AutomationAssumeRole:
-              #    - "{{AutomationAssumeRole}}"
-              #  ImageId:
-              #    - "{{ImageId}}"
               TargetParameterName: ImageId
               Targets:
                 - Key: "tag:{{TagKey}}"
@@ -138,36 +121,9 @@ Resources:
               - Name: deleteImage
                 Selector: "$"
                 Type: String
-            
-                
-          #- name: createImage
-          #  action: aws:executeAutomation
-          #  maxAttempts: 1
-          #  timeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-          #  onFailure: Abort
-          #  inputs:
-          #    DocumentName: AWS-CreateImage
-          #    #RuntimeParameters:
-          #    #  AutomationAssumeRole:
-          #    #    - "{{AutomationAssumeRole}}"
-          #    #  #InstanceId:
-          #    #  #  #- "{{InstanceId}}"
-          #    #  #  - "{{RESOURCE_ID}}"
-          #    TargetParameterName: InstanceId
-          #    Targets:
-          #      - Key: "tag:{{TagKey}}"
-          #        Values:
-          #          - "{{TagValue}}"
       DocumentFormat: YAML
       DocumentType: Automation
       Name: !Sub "${Prefix}-DeleteImageRunbook"
-      #Requires: 
-      #  - DocumentRequires
-      #Tags: 
-      #  - Tag
-      #TargetType: /AWS::EC2::Instance
-      #UpdateMethod: String
-      #VersionName: String
       
   DeleteImageRunbookRole:
     Type: AWS::IAM::Role
@@ -190,10 +146,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  #- ec2:CreateTags
-                  #- ec2:DeleteSnapshot
-                  #- ec2:DeregisterImage
-                  #- ec2:DescribeImages
                   - iam:PassRole
                   - tag:GetResources
                 Resource:
