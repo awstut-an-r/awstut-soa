@@ -13,9 +13,17 @@ Parameters:
     Type: String
     Default: a
     
-  DLMTagKey:
+  DLMTagKey1:
     Type: String
-    Default: dlm
+    Default: dlm1
+    
+  DLMTagKey2:
+    Type: String
+    Default: dlm2
+    
+  DLMTagKey3:
+    Type: String
+    Default: dlm3
     
   DLMTagAmiValue:
     Type: String
@@ -56,6 +64,10 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
+        DLMTagAmiValue: !Ref DLMTagAmiValue
+        DLMTagInstanceValue: !Ref DLMTagInstanceValue
+        DLMTagKey1: !Ref DLMTagKey1
+        DLMTagKey2: !Ref DLMTagKey2
         ImageId: !Ref ImageId
         InstanceSubnet: !GetAtt VPCStack.Outputs.InstanceSubnet
         InstanceType: !Ref InstanceType
@@ -70,6 +82,8 @@ Resources:
       Parameters:
         AvailabilityZone1: !Ref AvailabilityZone1
         DeviceNameSuffix: f
+        DLMTagEbsValue: !Ref DLMTagEbsValue
+        DLMTagKey3: !Ref DLMTagKey3
         Instance: !GetAtt EC2Stack.Outputs.Instance
         Prefix: !Ref Prefix
         VolumeSize: 1
@@ -82,8 +96,10 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-dlm.yaml"
       Parameters:
-        DLMTagKey: !Ref DLMTagKey
         DLMTagAmiValue: !Ref DLMTagAmiValue
         DLMTagEbsValue: !Ref DLMTagEbsValue
         DLMTagInstanceValue: !Ref DLMTagInstanceValue
+        DLMTagKey1: !Ref DLMTagKey1
+        DLMTagKey2: !Ref DLMTagKey2
+        DLMTagKey3: !Ref DLMTagKey3
         Prefix: !Ref Prefix
