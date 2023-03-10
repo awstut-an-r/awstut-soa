@@ -7,6 +7,12 @@ Parameters:
   DeviceNameSuffix:
     Type: String
     
+  DLMTagEbsValue:
+    Type: String
+    
+  DLMTagKey3:
+    Type: String
+    
   Instance:
     Type: String
     
@@ -26,6 +32,9 @@ Resources:
     Properties:
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}" 
       Size: !Ref VolumeSize
+      Tags:
+        - Key: !Ref DLMTagKey3
+          Value: !Ref DLMTagEbsValue
       VolumeType: !Ref VolumeType
       
   EBSAttachment:
