@@ -1,0 +1,208 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  Prefix:
+    Type: String
+    
+  TagKey:
+    Type: String
+    
+  TagValue:
+    Type: String
+    
+  ValidHours:
+    Type: Number
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+
+Resources:
+  DeleteImageRunbook:
+    Type: AWS::SSM::Document
+    Properties: 
+      #Attachments: 
+      #  - AttachmentsSource
+      Content:
+        assumeRole: "{{AutomationAssumeRole}}"
+        description: Create an AMI for an EC2 instance with a specific tag.
+        schemaVersion: "0.3"
+        parameters:
+          AutomationAssumeRole:
+            type: String
+            description: (Optional) The ARN of the role that allows Automation to perform the actions on your behalf.
+            default: !GetAtt DeleteImageRunbookRole.Arn
+          #Commands:
+          #  type: String
+          #  description: (Required) The commands to run or the path to an existing script on the instance.
+          #  default: echo Hello World
+          #InstanceId:
+          #  type: String
+          #  description: (Required) The instance ID you want to run commands on.
+          #  default: ""
+          AccountId:
+            type: String
+            description: (Required) The ID of Account.
+            default: !Ref AWS::AccountId
+          Region:
+            type: String
+            description: (Required) The Region.
+            default: !Ref AWS::Region
+          TagKey:
+            type: String
+            description: (Required) The tag key of Image.
+            default: !Ref TagKey
+          TagValue:
+            type: String
+            description: (Required) The tag value of Image.
+            default: !Ref TagValue
+          ValidHours:
+            type: Integer
+            description: (Required) The expired hours.
+            default: !Ref ValidHours
+        mainSteps:
+          - name: setTagToExpiredImages
+            action: aws:executeScript
+            inputs:
+              Runtime: python3.8
+              Handler: handler
+              InputPayload:
+                AccountId: "{{AccountId}}"
+                Region: "{{Region}}"
+                TagKey: "{{TagKey}}"
+                TagValue: "{{TagValue}}"
+                ValidHours: "{{ValidHours}}"
+              Script: |-
+                import boto3
+                import datetime
+                import json
+                
+                def handler(events, context):
+                  account_id = events['AccountId']
+                  region = events['Region']
+                  tag_key = events['TagKey']
+                  tag_value = events['TagValue']
+                  valid_hours = int(events['ValidHours'])
+                  
+                  client = boto3.client('ec2', region_name=region)
+                  
+                  now = datetime.datetime.now(datetime.timezone.utc)
+                
+                  response = client.describe_images(
+                    Owners=[account_id])
+                
+                  #expired_images = []
+                  create_tags_results = []
+                  for image in response['Images']:
+                    creation_date_str = image['CreationDate']
+                    creation_date_dt = datetime.datetime.fromisoformat(creation_date_str.replace('Z', '+00:00'))
+                    
+                    diff = now - creation_date_dt
+                    diff_hour = diff.seconds / (60 * 60)
+                    
+                    if diff_hour > valid_hours:
+                      #expired_images.append(image)
+                      result = client.create_tags(
+                        Resources=[
+                          image['ImageId']],
+                        Tags=[
+                          {
+                            'Key': tag_key,
+                            'Value': tag_value
+                          }],
+                        )
+                      create_tags_results.append(result)
+                  
+                  return {'createTagResults': json.dumps(create_tags_results)}
+            outputs:
+              - Name: createTagResults
+                Selector: $.Payload.creataTagResults
+                Type: String
+          - name: deleteTagedImages
+            action: aws:executeAutomation
+            maxAttempts: 1
+            timeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+            onFailure: Abort
+            inputs:
+              DocumentName: AWS-DeleteImage
+              #RuntimeParameters:
+              #  AutomationAssumeRole:
+              #    - "{{AutomationAssumeRole}}"
+              #  ImageId:
+              #    - "{{ImageId}}"
+              TargetParameterName: ImageId
+              Targets:
+                - Key: "tag:{{TagKey}}"
+                  Values:
+                    - "{{TagValue}}"
+            outputs:
+              - Name: deleteImage
+                Selector: "$"
+                Type: String
+            
+                
+          #- name: createImage
+          #  action: aws:executeAutomation
+          #  maxAttempts: 1
+          #  timeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+          #  onFailure: Abort
+          #  inputs:
+          #    DocumentName: AWS-CreateImage
+          #    #RuntimeParameters:
+          #    #  AutomationAssumeRole:
+          #    #    - "{{AutomationAssumeRole}}"
+          #    #  #InstanceId:
+          #    #  #  #- "{{InstanceId}}"
+          #    #  #  - "{{RESOURCE_ID}}"
+          #    TargetParameterName: InstanceId
+          #    Targets:
+          #      - Key: "tag:{{TagKey}}"
+          #        Values:
+          #          - "{{TagValue}}"
+      DocumentFormat: YAML
+      DocumentType: Automation
+      Name: !Sub "${Prefix}-DeleteImageRunbook"
+      #Requires: 
+      #  - DocumentRequires
+      #Tags: 
+      #  - Tag
+      #TargetType: /AWS::EC2::Instance
+      #UpdateMethod: String
+      #VersionName: String
+      
+  DeleteImageRunbookRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
+      Policies:
+        - PolicyName: SetTagAndDeleteImagePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  #- ec2:CreateTags
+                  #- ec2:DeleteSnapshot
+                  #- ec2:DeregisterImage
+                  #- ec2:DescribeImages
+                  - iam:PassRole
+                  - tag:GetResources
+                Resource:
+                  - "*"
+                  
+                  
+Outputs:
+  DeleteImageRunbookRoleArn:
+    Value: !GetAtt DeleteImageRunbookRole.Arn
+  
+  DeleteImageRunbook:
+    Value: !Ref DeleteImageRunbook

@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: soa-02-005
+    
+  #Handler:
+  #  Type: String
+  #  Default: index.lambda_handler
+  #  
+  #Runtime:
+  #  Type: String
+  #  Default: python3.8
+    
+  #Timeout:
+  #  Type: Number
+  #  Default: 10
+  
+  TagKey:
+    Type: String
+    Default: DeleteImage
+    
+  TagValue:
+    Type: String
+    Default: true
+    
+  WaitForSuccessTimeoutSeconds:
+    Type: Number
+    Default: 600
+    
+  ValidHours:
+    Type: Number
+    Default: 1
+    
+Resources:
+  SSMStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
+      Parameters:
+        #BucketName: !GetAtt S3Stack.Outputs.BucketName
+        #CreateImageRoleArn: !GetAtt SSMIAMStack.Outputs.CreateImageRoleArn
+        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
+        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
+        Prefix: !Ref Prefix
+        TagKey: !Ref TagKey
+        TagValue: !Ref TagValue
+        ValidHours: !Ref ValidHours
+        WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
+        
+  EventBridgeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        Runbook: !GetAtt SSMStack.Outputs.DeleteImageRunbook
+        RunbookRoleArn: !GetAtt SSMStack.Outputs.DeleteImageRunbookRoleArn
