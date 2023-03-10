@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  DLMTagKey:
-    Type: String
-    
   DLMTagAmiValue:
     Type: String
   
@@ -13,12 +10,21 @@ Parameters:
   DLMTagInstanceValue:
     Type: String
     
+  DLMTagKey1:
+    Type: String
+    
+  DLMTagKey2:
+    Type: String
+    
+  DLMTagKey3:
+    Type: String
+    
   Prefix:
     Type: String
     
     
 Resources:
-  AMILifecyclePolicy:
+  AmiLifecyclePolicy:
     Type: AWS::DLM::LifecyclePolicy
     Properties: 
       Description: !Sub "${Prefix}-LifecyclePolicy-AMI"
@@ -33,35 +39,16 @@ Resources:
           - CreateRule: 
               Interval: 1
               IntervalUnit: HOURS
+              Times: 
+                - "20:00"
             DeprecateRule: # AMI only.
               Count: 1
             Name: test-ami-policy
             RetainRule: 
               Count: 2
         TargetTags: 
-          - Key: !Ref DLMTagKey
+          - Key: !Ref DLMTagKey1
             Value: !Ref DLMTagAmiValue
-      State: ENABLED
-      
-  EBSLifecyclePolicy:
-    Type: AWS::DLM::LifecyclePolicy
-    Properties: 
-      Description: !Sub "${Prefix}-LifecyclePolicy-EBS"
-      ExecutionRoleArn: !GetAtt AWSDataLifecycleManagerDefaultRole.Arn
-      PolicyDetails: 
-        PolicyType: EBS_SNAPSHOT_MANAGEMENT
-        ResourceTypes: 
-          - VOLUME
-        Schedules: 
-          - CreateRule: 
-              Interval: 1
-              IntervalUnit: HOURS
-            Name: test-ami-policy
-            RetainRule: 
-              Count: 2
-        TargetTags: 
-          - Key: !Ref DLMTagKey
-            Value: !Ref DLMTagEbsValue
       State: ENABLED
       
   InstanceLifecyclePolicy:
@@ -79,14 +66,39 @@ Resources:
           - CreateRule: 
               Interval: 1
               IntervalUnit: HOURS
+              Times: 
+                - "12:40"
             Name: test-ami-policy
             RetainRule: 
               Count: 2
         TargetTags: 
-          - Key: !Ref DLMTagKey
+          - Key: !Ref DLMTagKey2
             Value: !Ref DLMTagInstanceValue
-      State: ENABLED
-        
+      State: DISABLED
+      
+  EBSLifecyclePolicy:
+    Type: AWS::DLM::LifecyclePolicy
+    Properties: 
+      Description: !Sub "${Prefix}-LifecyclePolicy-EBS"
+      ExecutionRoleArn: !GetAtt AWSDataLifecycleManagerDefaultRole.Arn
+      PolicyDetails: 
+        PolicyType: EBS_SNAPSHOT_MANAGEMENT
+        ResourceTypes: 
+          - VOLUME
+        Schedules: 
+          - CreateRule: 
+              Interval: 1
+              IntervalUnit: HOURS
+              Times: 
+                - "12:50"
+            Name: test-ami-policy
+            RetainRule: 
+              Count: 2
+        TargetTags: 
+          - Key: !Ref DLMTagKey3
+            Value: !Ref DLMTagEbsValue
+      State: DISABLED
+      
   AWSDataLifecycleManagerDefaultRoleForAMIManagement:
     Type: AWS::IAM::Role
     Properties:
