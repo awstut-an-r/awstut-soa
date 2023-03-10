@@ -146,7 +146,6 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - iam:PassRole
                   - tag:GetResources
                 Resource:
                   - "*"
