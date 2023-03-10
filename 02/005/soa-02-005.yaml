@@ -8,19 +8,7 @@ Parameters:
   Prefix:
     Type: String
     Default: soa-02-005
-    
-  #Handler:
-  #  Type: String
-  #  Default: index.lambda_handler
-  #  
-  #Runtime:
-  #  Type: String
-  #  Default: python3.8
-    
-  #Timeout:
-  #  Type: Number
-  #  Default: 10
-  
+
   TagKey:
     Type: String
     Default: DeleteImage
@@ -43,10 +31,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #CreateImageRoleArn: !GetAtt SSMIAMStack.Outputs.CreateImageRoleArn
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         Prefix: !Ref Prefix
         TagKey: !Ref TagKey
         TagValue: !Ref TagValue
