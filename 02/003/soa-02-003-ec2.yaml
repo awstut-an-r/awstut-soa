@@ -1,6 +1,18 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
+  DLMTagAmiValue:
+    Type: String
+    
+  DLMTagInstanceValue:
+    Type: String
+    
+  DLMTagKey1:
+    Type: String
+    
+  DLMTagKey2:
+    Type: String
+
   ImageId:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
 
@@ -24,11 +36,12 @@ Resources:
         - DeviceIndex: 0
           SubnetId: !Ref InstanceSubnet
       Tags:
-        - Key: DLM
-          Value: INSTANCE
-        - Key: DLM
-          Value: AMI
+        - Key: !Ref DLMTagKey1
+          Value: !Ref DLMTagAmiValue
+        - Key: !Ref DLMTagKey2
+          Value: !Ref DLMTagInstanceValue
             
+        
 Outputs:
   Instance:
     Value: !Ref Instance
