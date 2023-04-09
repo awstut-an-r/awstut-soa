@@ -7,7 +7,7 @@ Parameters:
     
   Prefix:
     Type: String
-    Default: soa-03-006
+    Default: [bucket-name]
     
   AcceptLanguage:
     Type: String
