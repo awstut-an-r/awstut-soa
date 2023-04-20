@@ -20,10 +20,6 @@ Parameters:
   LambdaRuntime:
     Type: String
     Default: python3.8
-    
-  #WafSearchString:
-  #  Type: String
-  #  Default: awstut
 
 
 Resources:
@@ -54,10 +50,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-waf.yaml"
       Parameters:
-        #ALBArn: !GetAtt ALBStack.Outputs.ALBArn
-        #ManagedRuleName: AWSManagedRulesAmazonIpReputationList
-        #ManagedRuleVendor: AWS
         Prefix: !Ref Prefix
         RestApi: !GetAtt ApiGatewayStack.Outputs.RestApi
-        #SearchString: !Ref WafSearchString
         StageName: !GetAtt ApiGatewayStack.Outputs.StageName
