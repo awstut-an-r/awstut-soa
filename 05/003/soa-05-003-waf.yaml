@@ -1,0 +1,306 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #ALBArn:
+  #  Type: String
+    
+  #ManagedRuleName:
+  #  Type: String
+  #  
+  #ManagedRuleVendor:
+  #  Type: String
+
+  Prefix:
+    Type: String
+    
+  RestApi:
+    Type: String
+    
+  #SearchString:
+  #  Type: String
+    
+  StageName:
+    Type: String
+    
+    
+Resources:
+  RuleGroup:
+    Type: AWS::WAFv2::RuleGroup
+    Properties:
+      #AvailableLabels: 
+      #  - LabelSummary
+      Capacity: 100
+      #ConsumedLabels: 
+      #  - LabelSummary
+      #CustomResponseBodies: 
+      #  Key : Value
+      #Description: String
+      Name: !Sub "${Prefix}-ComponentInspectionRuleGroup"
+      Rules:
+        - Action: 
+            #Allow: 
+            #  CustomRequestHandling: 
+            #    InsertHeaders: 
+            #      - Name: String
+            #        Value: String
+            Block: {}
+              #CustomResponse: 
+              #  CustomResponseBodyKey: String
+              #  ResponseCode: Integer
+              #  ResponseHeaders: 
+              #    - CustomHTTPHeader
+              #    - Name: String
+              #      Value: String
+            #Captcha: 
+            #  CustomRequestHandling: 
+            #    InsertHeaders:
+            #      - Name: String
+            #        Value: String
+            #Challenge: 
+            #  CustomRequestHandling: 
+            #    InsertHeaders:
+            #      - Name: String
+            #        Value: String
+            #Count: 
+            #  CustomRequestHandling: 
+            #    InsertHeaders:
+            #      - Name: String
+            #        Value: String
+          #CaptchaConfig: 
+          #  ImmunityTimeProperty: 
+          #    ImmunityTime: Integer
+          #ChallengeConfig: 
+          #  ImmunityTimeProperty: 
+          #    ImmunityTime: Integer
+          Name: !Sub "${Prefix}-HeadersInspectionRule"
+          Priority: 0
+          #RuleLabels: 
+          #  - Label
+          Statement: 
+            #AndStatement: 
+            #  AndStatement
+            ByteMatchStatement: 
+              FieldToMatch: 
+                #AllQueryArguments: Json
+                #Body: 
+                #  Body
+                #Cookies: 
+                #  Cookies
+                Headers: 
+                  MatchPattern: 
+                    All: {}
+                    #ExcludedHeaders: 
+                    #  - String
+                    #IncludedHeaders: 
+                    #  - String
+                  MatchScope: ALL
+                  OversizeHandling: CONTINUE # default
+                #JsonBody: 
+                #  JsonBody
+                #Method: Json
+                #QueryString: Json
+                #SingleHeader: 
+                #  SingleHeader
+                #SingleQueryArgument: 
+                #  SingleQueryArgument
+                #UriPath: Json
+              PositionalConstraint: CONTAINS
+              SearchString: "awstut1"
+              #SearchStringBase64: 
+              #  String
+              TextTransformations: 
+                - Priority: 0
+                  Type: NONE
+            #GeoMatchStatement: 
+            #  GeoMatchStatement
+            #IPSetReferenceStatement: 
+            #  IPSetReferenceStatement
+            #LabelMatchStatement: 
+            #  LabelMatchStatement
+            #NotStatement: 
+            #  NotStatement
+            #OrStatement: 
+            #  OrStatement
+            #RateBasedStatement: 
+            #  RateBasedStatement
+            #RegexMatchStatement: 
+            #  RegexMatchStatement
+            #RegexPatternSetReferenceStatement: 
+            #  RegexPatternSetReferenceStatement
+            #SizeConstraintStatement: 
+            #  SizeConstraintStatement
+            #SqliMatchStatement: 
+            #  SqliMatchStatement
+            #XssMatchStatement: 
+            #  XssMatchStatement
+          VisibilityConfig: 
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${Prefix}-HeadersInspectionRule"
+            SampledRequestsEnabled: true
+        - Action: 
+            Block: {}
+          Name: !Sub "${Prefix}-QueryStringInspectionRule"
+          Priority: 10
+          Statement: 
+            ByteMatchStatement: 
+              FieldToMatch: 
+                #AllQueryArguments: Json
+                #Body: 
+                #  Body
+                #Cookies: 
+                #  Cookies
+                #Headers: 
+                #  MatchPattern: 
+                #    All: {}
+                #    #ExcludedHeaders: 
+                #    #  - String
+                #    #IncludedHeaders: 
+                #    #  - String
+                #  MatchScope: ALL
+                #  OversizeHandling: CONTINUE # default
+                #JsonBody: 
+                #  JsonBody
+                #Method: Json
+                QueryString: {}
+                #SingleHeader: 
+                #  SingleHeader
+                #SingleQueryArgument: 
+                #  SingleQueryArgument
+                #UriPath: Json
+              PositionalConstraint: CONTAINS
+              SearchString: "awstut2"
+              #SearchStringBase64: 
+              #  String
+              TextTransformations: 
+                - Priority: 0
+                  Type: NONE
+          VisibilityConfig: 
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${Prefix}-QueryStringInspectionRule"
+            SampledRequestsEnabled: true
+        - Action: 
+            Block: {}
+          Name: !Sub "${Prefix}-BodyInspectionRule"
+          Priority: 20
+          Statement: 
+            ByteMatchStatement: 
+              FieldToMatch: 
+                #AllQueryArguments: Json
+                Body: 
+                  OversizeHandling: CONTINUE # default
+                #Cookies: 
+                #  Cookies
+                #Headers: 
+                #  MatchPattern: 
+                #    All: {}
+                #    #ExcludedHeaders: 
+                #    #  - String
+                #    #IncludedHeaders: 
+                #    #  - String
+                #  MatchScope: ALL
+                #  OversizeHandling: CONTINUE # default
+                #JsonBody: 
+                #  JsonBody
+                #Method: Json
+                #QueryString: {}
+                #SingleHeader: 
+                #  SingleHeader
+                #SingleQueryArgument: 
+                #  SingleQueryArgument
+                #UriPath: Json
+              PositionalConstraint: CONTAINS
+              SearchString: "awstut3"
+              #SearchStringBase64: 
+              #  String
+              TextTransformations: 
+                - Priority: 0
+                  Type: NONE
+          VisibilityConfig: 
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${Prefix}-BodyInspectionRule"
+            SampledRequestsEnabled: true
+        - Action: 
+            Block: {}
+          Name: !Sub "${Prefix}-CookieInspectionRule"
+          Priority: 30
+          Statement: 
+            ByteMatchStatement: 
+              FieldToMatch: 
+                #AllQueryArguments: Json
+                #Body: 
+                #  OversizeHandling: CONTINUE # default
+                Cookies: 
+                  MatchPattern: 
+                    All: {}
+                    #ExcludedCookies: 
+                    #  - String
+                    #IncludedCookies: 
+                    #  - String
+                  MatchScope: ALL
+                  OversizeHandling: CONTINUE # default
+                #Headers: 
+                #  MatchPattern: 
+                #    All: {}
+                #    #ExcludedHeaders: 
+                #    #  - String
+                #    #IncludedHeaders: 
+                #    #  - String
+                #  MatchScope: ALL
+                #  OversizeHandling: CONTINUE # default
+                #JsonBody: 
+                #  JsonBody
+                #Method: Json
+                #QueryString: {}
+                #SingleHeader: 
+                #  SingleHeader
+                #SingleQueryArgument: 
+                #  SingleQueryArgument
+                #UriPath: Json
+              PositionalConstraint: CONTAINS
+              SearchString: "awstut4"
+              #SearchStringBase64: 
+              #  String
+              TextTransformations: 
+                - Priority: 0
+                  Type: NONE
+          VisibilityConfig: 
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${Prefix}-CookieInspectionRule"
+            SampledRequestsEnabled: true
+      Scope: REGIONAL
+      #Tags: 
+      #  - Tag
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: !Sub "${Prefix}-ComponentInspectionRuleGroup"
+        SampledRequestsEnabled: true
+
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      DefaultAction:
+        Allow: {}
+      Name: !Sub "${Prefix}-WebACL"
+      Rules:
+        - Name: !Sub "${Prefix}-WebACL-ComponentInspection"
+          OverrideAction:
+            None: {}
+          Priority: 0
+          Statement:
+            RuleGroupReferenceStatement:
+              Arn: !GetAtt RuleGroup.Arn
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: !Sub "${Prefix}-WebACL-ComponentInspection"
+            SampledRequestsEnabled: true
+      Scope: REGIONAL
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: !Ref Prefix
+        SampledRequestsEnabled: true
+        
+  WebACLAssociation:
+    Type: AWS::WAFv2::WebACLAssociation
+    Properties: 
+      ResourceArn: !Sub "arn:aws:apigateway:${AWS::Region}::/restapis/${RestApi}/stages/${StageName}"
+      WebACLArn: !GetAtt WebACL.Arn
