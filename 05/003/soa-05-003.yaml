@@ -7,7 +7,7 @@ Parameters:
     
   Prefix:
     Type: String
-    Default: soa-05-003
+    Default: [bucket-name]
     
   LambdaArchitecture:
     Type: String
