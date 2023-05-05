@@ -1,0 +1,151 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #Bucket1:
+  #  Type: String
+  
+  #Bucket2:
+  #  Type: String
+  
+  #LogBucket:
+  #  Type: String
+  
+  ConfigBucket:
+    Type: String
+    
+  MaxCredentialUsageAge:
+    Type: Number
+
+  Prefix:
+    Type: String
+    
+
+Resources:
+  DeliveryChannel:
+    Type: AWS::Config::DeliveryChannel
+    Properties: 
+      #ConfigSnapshotDeliveryProperties: 
+      #  ConfigSnapshotDeliveryProperties
+      Name: !Sub "${Prefix}-DeliveryChannel"
+      S3BucketName: !Ref ConfigBucket
+      #S3KeyPrefix: aws-config
+      #S3KmsKeyArn: String
+      #SnsTopicARN: String
+      
+  ConfigurationRecorder:
+    Type: AWS::Config::ConfigurationRecorder
+    Properties: 
+      Name: !Sub "${Prefix}-ConfigurationRecorder"
+      RecordingGroup: 
+        AllSupported: true
+        IncludeGlobalResourceTypes: true
+        #ResourceTypes:
+        #  #- AWS::S3::Bucket
+        #  - AWS::IAM::User
+      #RoleARN: !Ref ConfigurationRecorderRole
+      RoleARN: !Sub "arn:aws:iam::${AWS::AccountId}:role/aws-service-role/config.amazonaws.com/${AWSServiceRoleForConfig}"
+        
+  AWSServiceRoleForConfig:
+    Type: AWS::IAM::ServiceLinkedRole
+    DeletionPolicy: Delete
+    Properties: 
+      AWSServiceName: config.amazonaws.com
+      #CustomSuffix: String
+      #Description: String
+  
+  #ConfigurationRecorderRole:
+  #  Type: AWS::IAM::Role
+  #  Properties:
+  #    AssumeRolePolicyDocument:
+  #      Version: 2012-10-17
+  #      Statement:
+  #        - Effect: Allow
+  #          Action: sts:AssumeRole
+  #          Principal:
+  #            Service:
+  #              - config.amazonaws.com
+  #    ManagedPolicyArns:
+  #      - arn:aws:iam::aws:policy/aws-service-role/AWSConfigServiceRolePolicy
+        
+  ConfigRule:
+    Type: AWS::Config::ConfigRule
+    DependsOn:
+      - ConfigurationRecorder
+    Properties: 
+      ConfigRuleName: !Sub "${Prefix}-IAM-Access-Keys-Rotated"
+      #Description: String
+      InputParameters:
+        maxAccessKeyAge: !Ref MaxCredentialUsageAge
+      #MaximumExecutionFrequency: String
+      #Scope: 
+      #  #ComplianceResourceId: String
+      #  ComplianceResourceTypes: []
+      #    #- AWS::S3::Bucket
+      #    #- AWS::IAM::User
+      #  #TagKey: String
+      #  #TagValue: String
+      Source: 
+        #CustomPolicyDetails: 
+        #  CustomPolicyDetails
+        Owner: AWS
+        #SourceDetails: 
+        #  - SourceDetail
+        #SourceIdentifier: S3_BUCKET_LOGGING_ENABLED
+        SourceIdentifier: ACCESS_KEYS_ROTATED
+        
+  RemediationConfiguration:
+    Type: AWS::Config::RemediationConfiguration
+    Properties: 
+      Automatic: true
+      ConfigRuleName: !Ref ConfigRule
+      #ExecutionControls: 
+      #  ExecutionControls
+      MaximumAutomaticAttempts: 5
+      Parameters:
+        AutomationAssumeRole:
+          StaticValue:
+            Values:
+              - !GetAtt RemediationConfigurationRole.Arn
+        IAMResourceId:
+          ResourceValue:
+            Value: RESOURCE_ID
+        MaxCredentialUsageAge:
+          StaticValue:
+            Values:
+              - !Ref MaxCredentialUsageAge
+      #ResourceType: AWS::S3::Bucket
+      RetryAttemptSeconds: 60
+      TargetId: AWSConfigRemediation-RevokeUnusedIAMUserCredentials
+      TargetType: SSM_DOCUMENT
+      TargetVersion: "1"
+      
+  RemediationConfigurationRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ssm.amazonaws.com
+      Policies:
+        - PolicyName: RemediationConfigurationPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:StartAutomationExecution
+                  - ssm:GetAutomationExecution
+                  - config:ListDiscoveredResources
+                  - iam:DeleteAccessKey
+                  - iam:DeleteLoginProfile
+                  - iam:GetAccessKeyLastUsed
+                  - iam:GetLoginProfile
+                  - iam:GetUser
+                  - iam:ListAccessKeys
+                  - iam:UpdateAccessKey
+                Resource: "*"
