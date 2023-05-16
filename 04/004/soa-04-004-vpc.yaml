@@ -18,13 +18,7 @@ Parameters:
     
   CidrIp4:
     Type: String
-    
-  #HTTPSPort:
-  #  Type: Number
-    
-  #MySQLPort:
-  #  Type: Number
-    
+
   Prefix:
     Type: String
 
@@ -37,9 +31,6 @@ Resources:
     Type: AWS::EC2::VPC
     Properties:
       CidrBlock: !Ref VPCCidrBlock
-      #EnableDnsHostnames: true
-      #EnableDnsSupport: true
-      
       
   IGW:
     Type: AWS::EC2::InternetGateway
