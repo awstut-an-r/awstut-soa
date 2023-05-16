@@ -1,9 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
 Parameters:
-  #BucketName:
-  #  Type: String
-  
   Bucket1:
     Type: String
     
@@ -47,17 +44,7 @@ Resources:
           SubnetId: !Ref InstanceSubnet1
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #Tags:
-      #  - Key: DLM
-      #    Value: INSTANCE
-      #  - Key: DLM
-      #    Value: AMI
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
-      #  unzip awscliv2.zip
-      #  sudo ./aws/install
-      
+
   Instance2:
     Type: AWS::EC2::Instance
     Properties:
@@ -81,17 +68,7 @@ Resources:
           SubnetId: !Ref InstanceSubnet2
           GroupSet:
             - !Ref InstanceSecurityGroup
-      #Tags:
-      #  - Key: DLM
-      #    Value: INSTANCE
-      #  - Key: DLM
-      #    Value: AMI
-      #UserData: !Base64 |
-      #  #!/bin/bash -xe
-      #  curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
-      #  unzip awscliv2.zip
-      #  sudo ./aws/install
-      
+
   Instance4:
     Type: AWS::EC2::Instance
     Properties:
@@ -139,12 +116,7 @@ Resources:
             Statement:
               - Effect: Allow
                 Action: s3:*
-                  #- s3:GetObject
-                  #- s3:PutObject
-                  #- s3:PutObjectAcl
-                  #- s3:ListBucket
                 Resource:
-                  #- !Sub "arn:aws:s3:::${BucketName}"
                   - !Sub "arn:aws:s3:::${Bucket1}"
                   - !Sub "arn:aws:s3:::${Bucket1}/*"
                   - !Sub "arn:aws:s3:::${Bucket2}"
