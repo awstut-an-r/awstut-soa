@@ -8,14 +8,6 @@ Parameters:
   Prefix:
     Type: String
     Default: soa-04-004
-    
-  #AvailabilityZone1:
-  #  Type: String
-  #  Default: a
-    
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
 
   ImageId:
     Type: String
@@ -38,15 +30,12 @@ Resources:
         CidrIp2: 10.0.2.0/24
         CidrIp3: 10.0.3.0/24
         CidrIp4: 10.0.4.0/24
-        #HTTPSPort: !Ref HTTPSPort
-        #MySQLPort: !Ref MySQLPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
         
   S3Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- EC2Stack
       - VPCStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
@@ -58,13 +47,10 @@ Resources:
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- EndpointStack
       - S3Stack
-      #- VPCStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
         Bucket1: !GetAtt S3Stack.Outputs.Bucket1
         Bucket2: !GetAtt S3Stack.Outputs.Bucket2
         Bucket3: !GetAtt S3Stack.Outputs.Bucket3
@@ -75,4 +61,3 @@ Resources:
         InstanceSubnet2: !GetAtt VPCStack.Outputs.InstanceSubnet2
         InstanceType: !Ref InstanceType
         Prefix: !Ref Prefix
-        
