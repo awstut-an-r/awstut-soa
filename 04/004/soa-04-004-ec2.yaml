@@ -1,0 +1,170 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #BucketName:
+  #  Type: String
+  
+  Bucket1:
+    Type: String
+    
+  Bucket2:
+    Type: String
+    
+  Bucket3:
+    Type: String
+    
+  Bucket4:
+    Type: String
+
+  ImageId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    
+  InstanceSecurityGroup:
+    Type: String
+  
+  InstanceSubnet1:
+    Type: String
+    
+  InstanceSubnet2:
+    Type: String
+
+  InstanceType:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+
+Resources:
+  Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile1
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref InstanceSubnet1
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+      #Tags:
+      #  - Key: DLM
+      #    Value: INSTANCE
+      #  - Key: DLM
+      #    Value: AMI
+      #UserData: !Base64 |
+      #  #!/bin/bash -xe
+      #  curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+      #  unzip awscliv2.zip
+      #  sudo ./aws/install
+      
+  Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile2
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref InstanceSubnet1
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+      
+  Instance3:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile1
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref InstanceSubnet2
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+      #Tags:
+      #  - Key: DLM
+      #    Value: INSTANCE
+      #  - Key: DLM
+      #    Value: AMI
+      #UserData: !Base64 |
+      #  #!/bin/bash -xe
+      #  curl "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o "awscliv2.zip"
+      #  unzip awscliv2.zip
+      #  sudo ./aws/install
+      
+  Instance4:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref InstanceProfile2
+      ImageId: !Ref ImageId
+      InstanceType: !Ref InstanceType
+      NetworkInterfaces:
+        - DeviceIndex: 0
+          SubnetId: !Ref InstanceSubnet2
+          GroupSet:
+            - !Ref InstanceSecurityGroup
+            
+  InstanceProfile1:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole1
+        
+  InstanceProfile2:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref InstanceRole2
+        
+  InstanceRole1:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: AccessS3Policy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: s3:*
+                  #- s3:GetObject
+                  #- s3:PutObject
+                  #- s3:PutObjectAcl
+                  #- s3:ListBucket
+                Resource:
+                  #- !Sub "arn:aws:s3:::${BucketName}"
+                  - !Sub "arn:aws:s3:::${Bucket1}"
+                  - !Sub "arn:aws:s3:::${Bucket1}/*"
+                  - !Sub "arn:aws:s3:::${Bucket2}"
+                  - !Sub "arn:aws:s3:::${Bucket2}/*"
+                  - !Sub "arn:aws:s3:::${Bucket3}"
+                  - !Sub "arn:aws:s3:::${Bucket3}/*"
+                  - !Sub "arn:aws:s3:::${Bucket4}"
+                  - !Sub "arn:aws:s3:::${Bucket4}/*"
+                  
+  InstanceRole2:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore

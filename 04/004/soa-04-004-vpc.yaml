@@ -1,0 +1,191 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  AvailabilityZone2:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  CidrIp2:
+    Type: String
+    
+  CidrIp3:
+    Type: String
+    
+  CidrIp4:
+    Type: String
+    
+  #HTTPSPort:
+  #  Type: Number
+    
+  #MySQLPort:
+  #  Type: Number
+    
+  Prefix:
+    Type: String
+
+  VPCCidrBlock:
+    Type: String
+    
+    
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      #EnableDnsHostnames: true
+      #EnableDnsSupport: true
+      
+      
+  IGW:
+    Type: AWS::EC2::InternetGateway
+  
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+      
+  EIP1:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      
+  EIP2:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+          
+  NATGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP1.AllocationId
+      SubnetId: !Ref PublicSubnet1
+          
+  NATGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt EIP2.AllocationId
+      SubnetId: !Ref PublicSubnet2
+      
+      
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      CidrBlock: !Ref CidrIp2
+      VpcId: !Ref VPC
+
+  InstanceSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      CidrBlock: !Ref CidrIp3
+      VpcId: !Ref VPC
+      
+  InstanceSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      CidrBlock: !Ref CidrIp4
+      VpcId: !Ref VPC
+  
+  
+  PublicSubnetRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  RouteToInternet:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicSubnetRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+      
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicSubnetRouteTable
+      
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicSubnetRouteTable
+      
+      
+  InstanceSubnetRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  InstanceSubnetRouteTable2:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  RouteToNATGateway1:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref InstanceSubnetRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway1
+      
+  RouteToNATGateway2:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref InstanceSubnetRouteTable2
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway2
+      
+  InstanceSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref InstanceSubnet1
+      RouteTableId: !Ref InstanceSubnetRouteTable1
+      
+  InstanceSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref InstanceSubnet2
+      RouteTableId: !Ref InstanceSubnetRouteTable2
+      
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-InstanceSecurityGroup"
+      GroupDescription: Deny All.
+      VpcId: !Ref VPC
+          
+          
+Outputs:
+  EIPPublicIp1:
+    Value: !GetAtt EIP1.PublicIp
+    
+  EIPPublicIp2:
+    Value: !GetAtt EIP2.PublicIp
+
+  InstanceSubnet1:
+    Value: !Ref InstanceSubnet1
+    
+  InstanceSubnet2:
+    Value: !Ref InstanceSubnet2
+    
+  InstanceSecurityGroup:
+    Value: !Ref InstanceSecurityGroup
+    
+  VPC:
+    Value: !Ref VPC

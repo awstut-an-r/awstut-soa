@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  EIPPublicIp1:
+    Type: String
+    
+  EIPPublicIp2:
+    Type: String
+
+  Prefix:
+    Type: String
+
+Resources:
+  Bucket1:
+    Type: AWS::S3::Bucket
+    Properties:
+      #AccessControl: Private
+      BucketName: !Sub "${Prefix}-bucket-01"
+      
+  Bucket2:
+    Type: AWS::S3::Bucket
+    Properties:
+      #AccessControl: Private
+      BucketName: !Sub "${Prefix}-bucket-02"
+      
+  Bucket3:
+    Type: AWS::S3::Bucket
+    Properties:
+      #AccessControl: Private
+      #AccessControl: PublicReadWrite
+      BucketName: !Sub "${Prefix}-bucket-03"
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      
+  Bucket4:
+    Type: AWS::S3::Bucket
+    Properties:
+      #AccessControl: Private
+      BucketName: !Sub "${Prefix}-bucket-04"
+      
+  BucketPolicy1:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket1
+      PolicyDocument:
+        Statement:
+          #- Principal:
+          #    Service: ec2.amazonaws.com
+          - Principal: "*"
+            Action: s3:*
+            Effect: Allow
+            Resource:
+              - !Sub "arn:aws:s3:::${Bucket1}"
+              - !Sub "arn:aws:s3:::${Bucket1}/*"
+            Condition:
+              #Bool:
+              #  aws:ViaAWSService: true
+              IpAddress:
+                aws:SourceIp:
+                  - !Ref EIPPublicIp1
+          #- Principal:
+          #    AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+          #  Action: s3:*
+          #  Effect: Allow
+          #  Resource:
+          #    - !Sub "arn:aws:s3:::${Bucket1}"
+          #    - !Sub "arn:aws:s3:::${Bucket1}/*"
+          #  #Condition:
+          #  #  IpAddress:
+          #  #    aws:SourceIp:
+          #  #      - !Ref EIPPublicIp1
+                  
+  BucketPolicy2:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket2
+      PolicyDocument:
+        Statement:
+          #- Principal:
+          #    Service: ec2.amazonaws.com
+          - Principal: "*"
+            Action: s3:*
+            Effect: Deny
+            Resource:
+              - !Sub "arn:aws:s3:::${Bucket2}"
+              - !Sub "arn:aws:s3:::${Bucket2}/*"
+            Condition:
+              #Bool:
+              #  aws:ViaAWSService: false
+              IpAddress:
+                aws:SourceIp:
+                  - !Ref EIPPublicIp1
+          #- Principal:
+          #    AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+          #  Action: s3:*
+          #  Effect: Allow
+          #  Resource:
+          #    - !Sub "arn:aws:s3:::${Bucket2}"
+          #    - !Sub "arn:aws:s3:::${Bucket2}/*"
+                  
+  BucketPolicy3:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket3
+      PolicyDocument:
+        Statement:
+          #- Principal:
+          #    Service: ec2.amazonaws.com
+          - Principal: "*"
+            Action: s3:*
+            Effect: Allow
+            Resource:
+              - !Sub "arn:aws:s3:::${Bucket3}"
+              - !Sub "arn:aws:s3:::${Bucket3}/*"
+            Condition:
+              NotIpAddress:
+                aws:SourceIp:
+                  - !Ref EIPPublicIp1
+              #StringNotEquals:
+              #StringEquals:
+              #  aws:CalledVia:
+              #    - cloudformation.amazonaws.com
+          #- Principal:
+          #    AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+          #  Action: s3:*
+          #  Effect: Allow
+          #  Resource:
+          #    - !Sub "arn:aws:s3:::${Bucket3}"
+          #    - !Sub "arn:aws:s3:::${Bucket3}/*"
+                  
+  BucketPolicy4:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref Bucket4
+      PolicyDocument:
+        Statement:
+          #- Principal:
+          #    Service: ec2.amazonaws.com
+          - Principal: "*"
+            Action: s3:*
+            Effect: Deny
+            Resource:
+              - !Sub "arn:aws:s3:::${Bucket4}"
+              - !Sub "arn:aws:s3:::${Bucket4}/*"
+            Condition:
+              #Bool:
+              #  aws:ViaAWSService: false
+              NotIpAddress:
+                aws:SourceIp:
+                  - !Ref EIPPublicIp1
+              #StringNotEquals:
+              #  aws:CalledVia:
+              #    - cloudformation.amazonaws.com
+          #- Principal:
+          #    #AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+          #    AWS: !Ref AWS::AccountId
+          #  Action: s3:*
+          #  Effect: Allow
+          #  Resource:
+          #    - !Sub "arn:aws:s3:::${Bucket4}"
+          #    - !Sub "arn:aws:s3:::${Bucket4}/*"
+      
+      
+Outputs:
+  Bucket1:
+    Value: !Ref Bucket1
+    
+  Bucket2:
+    Value: !Ref Bucket2
+    
+  Bucket3:
+    Value: !Ref Bucket3
+    
+  Bucket4:
+    Value: !Ref Bucket4
