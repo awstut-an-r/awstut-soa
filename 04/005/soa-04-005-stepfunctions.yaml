@@ -42,7 +42,6 @@ Resources:
               snapshot_id.$: $.no_encrypted_snapshot_id
             ResultPath: $.no_encrypted_snapshot_status
             Next: ChoiceState1
-            #End: true
           ChoiceState1:
             Type: Choice
             Choices:
@@ -65,7 +64,6 @@ Resources:
               snapshot_id.$: $.no_encrypted_snapshot_id
             ResultPath: $.encrypted_snapshot_id
             Next: DescribeSnapshotState2
-            #End: true
           DescribeSnapshotState2:
             Type: Task
             Resource: !Ref FunctionArn2
@@ -73,7 +71,6 @@ Resources:
               snapshot_id.$: $.encrypted_snapshot_id
             ResultPath: $.encrypted_snapshot_status
             Next: ChoiceState2
-            #End: true
           ChoiceState2:
             Type: Choice
             Choices:
@@ -108,7 +105,6 @@ Resources:
       RoleArn: !GetAtt StateMachineRole.Arn
       StateMachineName: !Ref Prefix
       StateMachineType: STANDARD
-      #TracingConfiguration:
 
   LogGroup:
     Type: AWS::Logs::LogGroup
@@ -126,8 +122,6 @@ Resources:
             Principal:
               Service:
                 - states.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - PolicyName: !Sub "${Prefix}-InvokeTaskFunctions"
           PolicyDocument:
@@ -156,8 +150,4 @@ Resources:
                   - logs:PutResourcePolicy
                   - logs:DescribeResourcePolicies
                   - logs:DescribeLogGroups
-                #Resource: !GetAtt LogGroup.Arn
                 Resource: "*"
-                #Resource: !Sub
-                #  - "${LogGroupArn}:*"
-                #  - LogGroupArn: !GetAtt LogGroup.Arn
