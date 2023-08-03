@@ -1,0 +1,432 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #Architecture:
+  #  Type: String
+  
+  #CodeS3Bucket:
+  #  Type: String
+  
+  DBInstanceArn:
+    Type: String
+    
+  DBSubnetGroup:
+    Type: String
+    
+  #EphemeralStorageSize:
+  #  Type: Number
+
+  Handler:
+    Type: String
+    
+  #LayerPackage:
+  #  Type: String
+  #  
+  #LayerS3Key:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+  Runtime:
+    Type: String
+    
+  Timeout:
+    Type: Number
+    
+  #UrlsParameter:
+  #  Type: String
+    
+    
+Resources:
+  #LambdaLayer:
+  #  Type: AWS::Lambda::LayerVersion
+  #  DependsOn:
+  #    - CustomResource
+  #  Properties:
+  #    CompatibleArchitectures:
+  #      - !Ref Architecture
+  #    CompatibleRuntimes:
+  #      - !Ref Runtime
+  #    Content:
+  #      S3Bucket: !Ref CodeS3Bucket
+  #      S3Key: !Ref LayerS3Key
+  #    Description: !Ref Prefix
+  #    LayerName: !Ref Prefix
+  #    #LicenseInfo: MIT
+  #    
+  #CustomResource:
+  #  Type: Custom::CustomResource
+  #  Properties:
+  #    ServiceToken: !GetAtt Function1.Arn
+
+  Function1:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+        #  LAYER_PACKAGE: !Ref LayerPackage
+        #  URLS_PARAMETER: !Ref UrlsParameter
+        #  S3_BUCKET: !Ref CodeS3Bucket
+        #  S3_BUCKET_FOLDER: !Ref Prefix
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          #import pprint
+          
+          region = os.environ['REGION']
+          
+          client = boto3.client('rds', region_name=region)
+          
+          def lambda_handler(event, context):
+            #print(event)
+            instance_id = event['instance_id']
+            
+            response1 = client.describe_db_instances(
+              DBInstanceIdentifier=instance_id,
+              #Filters=[
+              #    {
+              #        'Name': 'string',
+              #        'Values': [
+              #            'string',
+              #        ]
+              #    },
+              #],
+              #MaxRecords=123,
+              #Marker='string'
+            )
+            #print(response1)
+            #pprint.pprint(response1)
+            
+            response2 = client.create_db_snapshot(
+              DBSnapshotIdentifier='{instance}-no-encrypted'.format(instance=instance_id),
+              DBInstanceIdentifier=instance_id,
+              #Tags=[
+              #    {
+              #        'Key': 'string',
+              #        'Value': 'string'
+              #    },
+              #]
+            )
+            #print(response2)
+            
+            return {
+              'instance_id': instance_id,
+              'availability_zone': response1['DBInstances'][0]['AvailabilityZone'],
+              'db_subnet_group_name': response1['DBInstances'][0]['DBSubnetGroup']['DBSubnetGroupName'],
+              'security_group_id': response1['DBInstances'][0]['VpcSecurityGroups'][0]['VpcSecurityGroupId'],
+              'no_encrypted_snapshot_id': response2['DBSnapshot']['DBSnapshotIdentifier'],
+            }
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function1"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  Function2:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+        #  LAYER_PACKAGE: !Ref LayerPackage
+        #  URLS_PARAMETER: !Ref UrlsParameter
+        #  S3_BUCKET: !Ref CodeS3Bucket
+        #  S3_BUCKET_FOLDER: !Ref Prefix
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          
+          region = os.environ['REGION']
+          
+          client = boto3.client('rds', region_name=region)
+          
+          def lambda_handler(event, context):
+            #print(event)
+            #instance_id = event['instance_id']
+            snapshot_id = event['snapshot_id']
+            
+            response = client.describe_db_snapshots(
+              #DBInstanceIdentifier=instance_id,
+              DBSnapshotIdentifier=snapshot_id,
+              #SnapshotType='string',
+              #Filters=[
+              #    {
+              #        'Name': 'string',
+              #        'Values': [
+              #            'string',
+              #        ]
+              #    },
+              #],
+              #MaxRecords=123,
+              #Marker='string',
+              #IncludeShared=True|False,
+              #IncludePublic=True|False,
+              #DbiResourceId='string'
+            )
+            
+            #print(response)
+            #print(response['DBSnapshots'][0]['Status'])
+            return response['DBSnapshots'][0]['Status']
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function2"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  Function3:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+          KMS_KEY_ID: !Sub "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:alias/aws/rds"
+        #  LAYER_PACKAGE: !Ref LayerPackage
+        #  URLS_PARAMETER: !Ref UrlsParameter
+        #  S3_BUCKET: !Ref CodeS3Bucket
+        #  S3_BUCKET_FOLDER: !Ref Prefix
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          
+          region = os.environ['REGION']
+          kms_key_id = os.environ['KMS_KEY_ID']
+          
+          client = boto3.client('rds', region_name=region)
+          
+          def lambda_handler(event, context):
+            #print(event)
+            instance_id = event['instance_id']
+            snapshot_id = event['snapshot_id']
+            
+            response = client.copy_db_snapshot(
+              SourceDBSnapshotIdentifier=snapshot_id,
+              TargetDBSnapshotIdentifier='{instance}-encrypted'.format(instance=instance_id),
+              KmsKeyId=kms_key_id,
+              #Tags=[
+              #    {
+              #        'Key': 'string',
+              #        'Value': 'string'
+              #    },
+              #],
+              #CopyTags=True|False,
+              #OptionGroupName='string',
+              #TargetCustomAvailabilityZone='string',
+              #CopyOptionGroup=True|False,
+              #SourceRegion='string'
+            )
+            
+            #print(response)
+            return response['DBSnapshot']['DBSnapshotIdentifier']
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function3"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+      
+  Function4:
+    Type: AWS::Lambda::Function
+    Properties:
+      #Architectures:
+      #  - !Ref Architecture
+      Environment:
+        Variables:
+          REGION: !Ref AWS::Region
+        #  LAYER_PACKAGE: !Ref LayerPackage
+        #  URLS_PARAMETER: !Ref UrlsParameter
+        #  S3_BUCKET: !Ref CodeS3Bucket
+        #  S3_BUCKET_FOLDER: !Ref Prefix
+      Code:
+        ZipFile: |
+          import boto3
+          import os
+          
+          region = os.environ['REGION']
+          
+          client = boto3.client('rds', region_name=region)
+          
+          def lambda_handler(event, context):
+            #print(event)
+            instance_id = event['instance_id']
+            snapshot_id = event['snapshot_id']
+            availability_zone = event['availability_zone']
+            db_subnet_group_name = event['db_subnet_group_name']
+            security_group_id = event['security_group_id']
+            
+            response = client.restore_db_instance_from_db_snapshot(
+              DBInstanceIdentifier='{instance}-encrypted'.format(instance=instance_id),
+              DBSnapshotIdentifier=snapshot_id,
+              #DBInstanceClass='string',
+              #Port=123,
+              AvailabilityZone=availability_zone,
+              DBSubnetGroupName=db_subnet_group_name,
+              #MultiAZ=True|False,
+              #PubliclyAccessible=True|False,
+              #AutoMinorVersionUpgrade=True|False,
+              #LicenseModel='string',
+              #DBName='string',
+              #Engine='string',
+              #Iops=123,
+              #OptionGroupName='string',
+              #Tags=[
+              #    {
+              #        'Key': 'string',
+              #        'Value': 'string'
+              #    },
+              #],
+              #StorageType='string',
+              #TdeCredentialArn='string',
+              #TdeCredentialPassword='string',
+              VpcSecurityGroupIds=[
+                security_group_id,
+              ],
+              #Domain='string',
+              #DomainFqdn='string',
+              #DomainOu='string',
+              #DomainAuthSecretArn='string',
+              #DomainDnsIps=[
+              #    'string',
+              #],
+              #CopyTagsToSnapshot=True|False,
+              #DomainIAMRoleName='string',
+              #EnableIAMDatabaseAuthentication=True|False,
+              #EnableCloudwatchLogsExports=[
+              #    'string',
+              #],
+              #ProcessorFeatures=[
+              #    {
+              #        'Name': 'string',
+              #        'Value': 'string'
+              #    },
+              #],
+              #UseDefaultProcessorFeatures=True|False,
+              #DBParameterGroupName='string',
+              #DeletionProtection=True|False,
+              #EnableCustomerOwnedIp=True|False,
+              #CustomIamInstanceProfile='string',
+              #BackupTarget='string',
+              #NetworkType='string',
+              #StorageThroughput=123,
+              #DBClusterSnapshotIdentifier='string',
+              #AllocatedStorage=123
+            )
+            #print(response)
+            return response['DBInstance']['DBInstanceIdentifier']
+      #EphemeralStorage:
+      #  Size: !Ref EphemeralStorageSize
+      FunctionName: !Sub "${Prefix}-function4"
+      Handler: !Ref Handler
+      #Layers:
+      #  - !Ref LambdaLayer
+      Runtime: !Ref Runtime
+      Role: !GetAtt FunctionRole.Arn
+      Timeout: !Ref Timeout
+      #VpcConfig:
+      #  SecurityGroupIds:
+      #    - !Ref FunctionSecurityGroup
+      #  SubnetIds:
+      #    - !Ref FunctionSubnet
+  
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: !Sub "${Prefix}-Policy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              #- Effect: Allow
+              #  Action:
+              #    - rds:*
+              #  Resource: "*"
+              - Effect: Allow
+                Action:
+                  - rds:DescribeDBInstances
+                Resource: 
+                  - !Ref DBInstanceArn
+              - Effect: Allow
+                Action:
+                  - rds:CreateDBSnapshot
+                  - rds:DescribeDBSnapshots
+                Resource: 
+                  - !Ref DBInstanceArn
+                  - !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:snapshot:*"
+              - Effect: Allow
+                Action:
+                  - rds:CopyDBSnapshot
+                Resource: 
+                  - !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:snapshot:*"
+              - Effect: Allow
+                Action:
+                  - rds:RestoreDBInstanceFromDBSnapshot
+                Resource: 
+                  - !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:db:*"
+                  - !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:og:*"
+                  - !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:pg:*"
+                  - !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:snapshot:*"
+                  - !Sub "arn:aws:rds:${AWS::Region}:${AWS::AccountId}:subgrp:${DBSubnetGroup}"
+              #- Effect: Allow
+              #  Action:
+              #    - kms:*
+              #  Resource: "*"
+                
+                
+Outputs:
+  FunctionArn1:
+    Value: !GetAtt Function1.Arn
+    
+  FunctionArn2:
+    Value: !GetAtt Function2.Arn
+
+  FunctionArn3:
+    Value: !GetAtt Function3.Arn
+    
+  FunctionArn4:
+    Value: !GetAtt Function4.Arn
