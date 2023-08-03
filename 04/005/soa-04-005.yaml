@@ -40,11 +40,7 @@ Parameters:
   DBMasterUserPassword:
     Type: String
     Default: Passw0rd
-    
-  #DBName:
-  #  Type: String
-  #  Default: testdb
-    
+
   HTTPSPort:
     Type: Number
     Default: 443
@@ -56,11 +52,7 @@ Parameters:
   InstanceType:
     Type: String
     Default: t4g.nano
-    
-  #LambdaPackage:
-  #  Type: String
-  #  Default: deploy.zip
-  
+
   LambdaHandler:
     Type: String
     Default: index.lambda_handler
@@ -96,7 +88,6 @@ Resources:
         AvailabilityZone2: !Ref AvailabilityZone2
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
-        #CidrIp3: 10.0.3.0/24
         HTTPSPort: !Ref HTTPSPort
         MySQLPort: !Ref MySQLPort
         Prefix: !Ref Prefix
@@ -141,7 +132,6 @@ Resources:
         DBEngine: !Ref DBEngine
         DBEngineVersion: !Ref DBEngineVersion
         DBInstanceClass: !Ref DBInstanceClass
-        #DBName: !Ref DBName
         DBMasterUsername: !Ref DBMasterUsername
         DBMasterUserPassword: !Ref DBMasterUserPassword
         DBSecurityGroup: !GetAtt VPCStack.Outputs.DBSecurityGroup
@@ -156,21 +146,12 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
       Parameters:
-        #Architecture: !Ref Architecture
-        #CodeS3Bucket: !GetAtt S3Bucket.Outputs.Bucket
-        #CodeS3Bucket: !Ref TemplateBucketName
-        #CodeS3Key: !Sub "${Prefix}/${LambdaPackage}"
         DBInstanceArn: !GetAtt RDSStack.Outputs.DBInstanceArn
         DBSubnetGroup: !GetAtt RDSStack.Outputs.DBSubnetGroup
-        #EphemeralStorageSize: !Ref EphemeralStorageSize
-        #FunctionSecurityGroup: !GetAtt VPCStack.Outputs.FunctionSecurityGroup
         Handler: !Ref LambdaHandler
-        #LayerPackage: !Ref LayerPackage
-        #LayerS3Key: !Sub "${Prefix}/${LayerPackage}"
         Prefix: !Ref Prefix
         Runtime: !Ref LambdaRuntime
         Timeout: !Ref LambdaTimeout
-        #UrlsParameter: !GetAtt SSMStack.Outputs.UrlsParameter
         
   StepFunctionsStack:
     Type: AWS::CloudFormation::Stack
