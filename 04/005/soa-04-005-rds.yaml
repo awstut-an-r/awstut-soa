@@ -15,10 +15,7 @@ Parameters:
     
   DBInstanceClass:
     Type: String
-    
-  #DBName:
-  #  Type: String
-    
+
   DBMasterUsername:
     Type: String
     
@@ -46,15 +43,12 @@ Resources:
       AllocatedStorage: !Ref DBAllocatedStorage
       AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone}"
       DBInstanceClass: !Ref DBInstanceClass
-      #DBInstanceIdentifier: dbinstance
       DBInstanceIdentifier: !Ref Prefix
-      #DBName: !Ref DBName
       DBSubnetGroupName: !Ref DBSubnetGroup
       Engine: !Ref DBEngine
       EngineVersion: !Ref DBEngineVersion
       MasterUsername: !Ref DBMasterUsername
       MasterUserPassword: !Ref DBMasterUserPassword
-      #MultiAZ: true
       StorageEncrypted: false
       VPCSecurityGroups:
         - !Ref DBSecurityGroup
@@ -75,6 +69,3 @@ Outputs:
     
   DBSubnetGroup:
     Value: !Ref DBSubnetGroup
-
-  #DBInstanceEndpointAddress:
-  #  Value: !GetAtt DBInstance.Endpoint.Address
