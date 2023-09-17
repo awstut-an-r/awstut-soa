@@ -40,23 +40,25 @@ Resources:
     Type: AWS::Route53::HealthCheck
     Properties:
       HealthCheckConfig:
-        Port: !Ref HTTPPort
-        Type: HTTP
-        ResourcePath: /
-        FullyQualifiedDomainName: !Sub "{{resolve:ssm:${SSMParameterALBDNSName1}}}"
-        RequestInterval: !Ref RequestInterval
         FailureThreshold: !Ref FailureThreshold
+        FullyQualifiedDomainName: !Sub "{{resolve:ssm:${SSMParameterALBDNSName1}}}"
+        MeasureLatency: true
+        Port: !Ref HTTPPort
+        RequestInterval: !Ref RequestInterval
+        ResourcePath: /
+        Type: HTTP
         
   HealthCheck2:
     Type: AWS::Route53::HealthCheck
     Properties:
       HealthCheckConfig:
-        Port: !Ref HTTPPort
-        Type: HTTP
-        ResourcePath: /
-        FullyQualifiedDomainName: !Sub "{{resolve:ssm:${SSMParameterALBDNSName2}}}"
-        RequestInterval: !Ref RequestInterval
         FailureThreshold: !Ref FailureThreshold
+        FullyQualifiedDomainName: !Sub "{{resolve:ssm:${SSMParameterALBDNSName2}}}"
+        MeasureLatency: true
+        Port: !Ref HTTPPort
+        RequestInterval: !Ref RequestInterval
+        ResourcePath: /
+        Type: HTTP
 
   RecordSetGroup:
     Type: AWS::Route53::RecordSetGroup
