@@ -42,7 +42,6 @@ Resources:
           ssm_client = boto3.client('ssm', region_name=region)
            
           CREATE = 'Create'
-          DELETE = 'Delete'
           response_data = {}
           
           def lambda_handler(event, context):
@@ -53,12 +52,6 @@ Resources:
                   Value=parameter_value,
                   Type='String',
                   Overwrite=True
-                )
-                print(response)
-                
-              elif event['RequestType'] == DELETE:
-                response = ssm_client.delete_parameter(
-                  Name=parameter_name
                 )
                 print(response)
               
