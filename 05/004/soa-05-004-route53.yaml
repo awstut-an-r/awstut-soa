@@ -33,10 +33,7 @@ Parameters:
     
   SSMParameterALBDNSName2:
     Type: String
-    
-  #TTL:
-  #  Type: Number
-    
+
 
 Resources:
   HealthCheck1:
@@ -70,43 +67,17 @@ Resources:
             DNSName: !Sub "{{resolve:ssm:${SSMParameterALBDNSName1}}}"
             EvaluateTargetHealth: true
             HostedZoneId: !Ref ALBHostedZoneId1
-          #CidrRoutingConfig: 
-          #  CidrRoutingConfig
-          #Failover: String
-          #GeoLocation: 
-          #  GeoLocation
           HealthCheckId: !Ref HealthCheck1
-          #HostedZoneId: !Ref ALBHostedZoneId1
-          #HostedZoneName: String
-          #MultiValueAnswer: Boolean
-          #Name: !Sub "{{resolve:ssm:${SSMParameterALBDNSName1}}}"
           Name: !Ref DomainName
           Region: !Ref Region1
-          #ResourceRecords: 
-          #  - String
           SetIdentifier: !Ref Region1
-          #TTL: !Ref TTL
           Type: A
-          #Weight: Integer
         - AliasTarget: 
             DNSName: !Sub "{{resolve:ssm:${SSMParameterALBDNSName2}}}"
             EvaluateTargetHealth: true
             HostedZoneId: !Ref ALBHostedZoneId2
-          #CidrRoutingConfig: 
-          #  CidrRoutingConfig
-          #Failover: String
-          #GeoLocation: 
-          #  GeoLocation
           HealthCheckId: !Ref HealthCheck2
-          #HostedZoneId: !Ref ALBHostedZoneId2
-          #HostedZoneName: String
-          #MultiValueAnswer: Boolean
-          #Name: !Sub "{{resolve:ssm:${SSMParameterALBDNSName2}}}"
           Name: !Ref DomainName
           Region: !Ref Region2
-          #ResourceRecords: 
-          #  - String
           SetIdentifier: !Ref Region2
-          #TTL: !Ref TTL
           Type: A
-          #Weight: Integer
