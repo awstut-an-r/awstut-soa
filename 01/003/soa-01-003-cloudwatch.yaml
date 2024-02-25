@@ -21,27 +21,20 @@ Resources:
   MetricStream:
     Type: AWS::CloudWatch::MetricStream
     Properties:
-      #ExcludeFilters: 
-      #  - MetricStreamFilter
       FirehoseArn: !Ref KinesisFirehoseDeliveryStreamArn
       IncludeFilters: 
         - MetricNames: 
             - !Ref MetricName1
           Namespace: !Ref Namespace1
-      #IncludeLinkedAccountsMetrics: Boolean
       Name: !Sub "${Prefix}-ec2-cpu"
       OutputFormat: json
       RoleArn: !GetAtt MetricStreamRole.Arn
       StatisticsConfigurations: 
-        #- MetricStreamStatisticsConfiguration
         - AdditionalStatistics: 
             - !Ref AdditionalStatistic1
           IncludeMetrics: 
-            #- MetricStreamStatisticsMetric
             - MetricName: !Ref MetricName1
               Namespace: !Ref Namespace1
-      #Tags: 
-      #  - Tag
         
   MetricStreamRole:
     Type: AWS::IAM::Role
@@ -54,11 +47,7 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service:
-                #- lambda.amazonaws.com
                 - streams.metrics.cloudwatch.amazonaws.com
-      #ManagedPolicyArns:
-      #  - arn:aws:iam::aws:policy/AmazonKinesisFullAccess
-      #  - arn:aws:iam::aws:policy/AmazonS3FullAccess
       Policies:
         - PolicyName: MetricStreamPolicy
           PolicyDocument:
@@ -70,6 +59,3 @@ Resources:
                   - firehose:PutRecordBatch
                 Resource:
                   - !Ref KinesisFirehoseDeliveryStreamArn
-                  #- !Sub "arn:aws:s3:::${BucketName}"
-                  #- !Ref BucketArn
-                  #- !Sub "${BucketArn}/*"
