@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TemplateBucketName:
+    Type: String
+    Default: awstut-bucket
+    
+  Prefix:
+    Type: String
+    Default: soa-01-003
+    
+  #KinesisNamePrefix:
+  #  Type: String
+  #  Default: SAMPLE_APP
+    
+  AdditionalStatistic1:
+    Type: String
+    Default: p95
+    
+  KinesisShardCount:
+    Type: Number
+    Default: 1
+    
+  #LambdaArchitecture:
+  #  Type: String
+  #  Default: arm64
+  #  
+  #LambdaHandler:
+  #  Type: String
+  #  Default: index.lambda_handler
+  #  
+  #LambdaRuntime:
+  #  Type: String
+  #  Default: python3.8
+  #  
+  #LambdaTimeout:
+  #  Type: Number
+  #  Default: 60
+  
+  MetricName1:
+    Type: String
+    Default: CPUUtilization
+    
+  Namespace1:
+    Type: String
+    Default: AWS/EC2
+  
+
+
+Resources:
+  S3Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
+      Parameters:
+        Prefix: !Ref Prefix
+        
+  KinesisStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-kinesis.yaml"
+      Parameters:
+        BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        #BucketName: !GetAtt S3Stack.Outputs.BucketName
+        #KinesisFirehoseDeliveryStreamName: !Sub "${Prefix}-FirehoseDeliveryStream"
+        Prefix: !Ref Prefix
+        #NamePrefix: !Ref KinesisNamePrefix
+        ShardCount: !Ref KinesisShardCount
+  
+  CloudWatchStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-cloudwatch.yaml"
+      Parameters:
+        AdditionalStatistic1: !Ref AdditionalStatistic1
+        #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
+        KinesisFirehoseDeliveryStreamArn: !GetAtt KinesisStack.Outputs.KinesisFirehoseDeliveryStreamArn
+        MetricName1: !Ref MetricName1
+        Namespace1: !Ref Namespace1
+        Prefix: !Ref Prefix

@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AdditionalStatistic1:
+    Type: String
+
+  KinesisFirehoseDeliveryStreamArn:
+    Type: String
+    
+  MetricName1:
+    Type: String
+    
+  Namespace1:
+    Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  MetricStream:
+    Type: AWS::CloudWatch::MetricStream
+    Properties:
+      #ExcludeFilters: 
+      #  - MetricStreamFilter
+      FirehoseArn: !Ref KinesisFirehoseDeliveryStreamArn
+      IncludeFilters: 
+        - MetricNames: 
+            - !Ref MetricName1
+          Namespace: !Ref Namespace1
+      #IncludeLinkedAccountsMetrics: Boolean
+      Name: !Sub "${Prefix}-ec2-cpu"
+      OutputFormat: json
+      RoleArn: !GetAtt MetricStreamRole.Arn
+      StatisticsConfigurations: 
+        #- MetricStreamStatisticsConfiguration
+        - AdditionalStatistics: 
+            - !Ref AdditionalStatistic1
+          IncludeMetrics: 
+            #- MetricStreamStatisticsMetric
+            - MetricName: !Ref MetricName1
+              Namespace: !Ref Namespace1
+      #Tags: 
+      #  - Tag
+        
+  MetricStreamRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                #- lambda.amazonaws.com
+                - streams.metrics.cloudwatch.amazonaws.com
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/AmazonKinesisFullAccess
+      #  - arn:aws:iam::aws:policy/AmazonS3FullAccess
+      Policies:
+        - PolicyName: MetricStreamPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
+                Resource:
+                  - !Ref KinesisFirehoseDeliveryStreamArn
+                  #- !Sub "arn:aws:s3:::${BucketName}"
+                  #- !Ref BucketArn
+                  #- !Sub "${BucketArn}/*"
