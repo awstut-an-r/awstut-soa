@@ -24,11 +24,7 @@ Parameters:
   EventBusName:
     Type: String
     Default: default
-    
-  #HTTPPort:
-  #  Type: Number
-  #  Default: 80
-  
+
   HTTPSPort:
     Type: Number
     Default: 443
@@ -36,11 +32,9 @@ Parameters:
   InstanceImageId:
     Type: String
     Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
-    #Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
-    
+
   InstanceType:
     Type: String
-    #Default: t4g.nano
     Default: t4g.micro
     
   LambdaArchitecture:
@@ -54,11 +48,7 @@ Parameters:
   LambdaRuntime:
     Type: String
     Default: python3.12
-    
-  #WaitForSuccessTimeoutSeconds:
-  #  Type: Number
-  #  Default: 600
-    
+
 
 Resources:
   S3Stack:
@@ -66,10 +56,8 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-s3.yaml"
       Parameters:
-        #Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
-        #Runtime: !Ref LambdaRuntime
-        
+
   VPCStack:
     Type: AWS::CloudFormation::Stack
     Properties:
@@ -79,9 +67,6 @@ Resources:
         AvailabilityZone2: d
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
-        #CidrIp3: 10.0.3.0/24
-        #CidrIp4: 10.0.4.0/24
-        #HTTPPort: !Ref HTTPPort
         HTTPSPort: !Ref HTTPSPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
@@ -107,12 +92,7 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-autoscaling.yaml"
       Parameters:
-        #AlarmEvaluationPeriod: 2
-        #AlarmPeriod: 60
-        #AlarmThreshold: 30
-        #ALBTargetGroup: !GetAtt ALBStack.Outputs.ALBTargetGroup
         Bucket: !GetAtt S3Stack.Outputs.Bucket
-        #Cooldown: 300
         DesiredCapacity: !Ref AutoScalingDesiredCapacity
         ImageId: !Ref InstanceImageId
         InstanceSecurityGroup: !GetAtt VPCStack.Outputs.InstanceSecurityGroup
@@ -122,58 +102,27 @@ Resources:
         Prefix: !Ref Prefix
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-        #ScalingAdjustment1: 1
-        #ScalingAdjustment2: -1
-        #TargetTrackingConfigurationTargetValue: 50.0
-        
-  #LambdaStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-lambda.yaml"
-  #    Parameters:
-  #      Architecture: !Ref LambdaArchitecture
-  #      #BucketArn: !GetAtt S3Stack.Outputs.BucketArn
-  #      #BucketName: !GetAtt S3Stack.Outputs.BucketName
-  #      #EventBusName: !Ref EventBusName
-  #      Handler: !Ref LambdaHandler
-  #      Prefix: !Ref Prefix
-  #      Runtime: !Ref LambdaRuntime
-        
+
   SSMStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - S3Stack
-    #  - EndpointStack
-    #  - EC2Stack
-    #  #- SSMIAMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ssm.yaml"
       Parameters:
         Bucket: !GetAtt S3Stack.Outputs.Bucket
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #CreateImageRoleArn: !GetAtt SSMIAMStack.Outputs.CreateImageRoleArn
-        #Instance: !GetAtt EC2Stack.Outputs.Instance
-        #Instance1: !GetAtt EC2Stack.Outputs.Instance1
-        #Instance2: !GetAtt EC2Stack.Outputs.Instance2
         Prefix: !Ref Prefix
-        #TagKey: !Ref TagKey
-        #TagValue: !Ref TagValue
-        #WaitForSuccessTimeoutSeconds: !Ref WaitForSuccessTimeoutSeconds
-        
+
   EventBridgeStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
       - AutoScalingStack
-      #- LambdaStack
       - SSMStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-eventbridge.yaml"
       Parameters:
         AutoScalingGroup: !GetAtt AutoScalingStack.Outputs.AutoScalingGroup
         Document: !GetAtt SSMStack.Outputs.Document
-        #DocumentArn: !GetAtt SSMStack.Outputs.DocumentArn
         DocumentRoleArn: !GetAtt SSMStack.Outputs.DocumentRoleArn
         EventBusName: !Ref EventBusName
-        #Function: !GetAtt LambdaStack.Outputs.Function
-        #FunctionArn2: !GetAtt LambdaStack.Outputs.FunctionArn2
         Prefix: !Ref Prefix
