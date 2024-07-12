@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  AutoScalingGroup:
+    Type: String
+
+  Document:
+    Type: String
+    
+  #DocumentArn:
+  #  Type: String
+    
+  DocumentRoleArn:
+    Type: String
+
+  EventBusName:
+    Type: String
+    
+  #Function:
+  #  Type: String
+  
+  #FunctionArn2:
+  #  Type: String
+    
+  Prefix:
+    Type: String
+    
+    
+Resources:
+  EventsRule:
+    Type: AWS::Events::Rule
+    Properties: 
+      #Description: String
+      EventBusName: !Ref EventBusName
+      EventPattern:
+        source:
+          #- !Ref Prefix
+          - aws.autoscaling
+        detail-type:
+          - EC2 Instance-terminate Lifecycle Action
+        detail:
+          AutoScalingGroupName:
+            - !Ref AutoScalingGroup
+      Name: !Sub "${Prefix}-EventsRule"
+      #RoleArn: String
+      #ScheduleExpression: String
+      State: ENABLED
+      Targets: 
+        #- Arn: !Sub "arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Function}"
+        #  Id: !Ref Function
+        #  #RoleArn: !GetAtt EventBridgeRole.Arn
+        #  #Input: !Sub '{"AutomationAssumeRole": ["${DocumentRoleArn}"]}'
+        - Arn: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${Document}"
+        #- Arn: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${Document}:*"
+          Id: !Ref Document
+          #Input: !Sub '{"AutomationAssumeRole": ["${DocumentRoleArn}"]}'
+          #InputPath: !Sub '{"instanceid": ["$.detail.EC2InstanceId"]}'
+          #InputTransformer: !Sub '{"AutomationAssumeRole": ["${DocumentRoleArn}"], "InstanceId": [<instanceid>]}'
+          InputTransformer:
+            InputPathsMap: 
+              instanceid: $.detail.EC2InstanceId
+            InputTemplate: !Sub '{"AutomationAssumeRole": ["${DocumentRoleArn}"], "InstanceId": [<instanceid>]}'
+            #InputTemplate: !Sub '{"InstanceId": [<instanceid>]}'
+          RoleArn: !GetAtt EventBridgeRole.Arn
+        #- Arn: !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${Document}"
+        #  Id: !Ref Document
+        #  #Input: !Sub '{"AutomationAssumeRole": ["${DocumentRoleArn}"]}'
+        #  #InputPath: !Sub '{"instanceid": ["$.detail.EC2InstanceId"]}'
+        #  InputTransformer:
+        #    InputPathsMap: 
+        #      instanceid: $.detail.EC2InstanceId
+        #    #InputTemplate: !Sub '{"AutomationAssumeRole": ["${DocumentRoleArn}"], "InstanceId": [<instanceid>]}'
+        #    #InputTemplate: !Sub '{"InstanceId": [<instanceid>]}'
+        #    InputTemplate: '{"InstanceId": [<instanceid>]}'
+        #  RoleArn: !GetAtt EventBridgeRole.Arn
+        #  RunCommandParameters: {}
+        #  #  RunCommandTargets:
+        #  #    - Key: InstanceIds
+        #  #      Values: 
+        #  #        - !Ref 
+        
+          
+  #EventsRulePermission: 
+  #  Type: AWS::Lambda::Permission
+  #  Properties: 
+  #    FunctionName: !Ref Function
+  #    Action: lambda:InvokeFunction
+  #    Principal: events.amazonaws.com
+  #    SourceArn: !GetAtt EventsRule.Arn
+  
+  EventBridgeRole:
+    Type: AWS::IAM::Role
+    DeletionPolicy: Delete
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service:
+                - events.amazonaws.com
+      #ManagedPolicyArns:
+      #  - arn:aws:iam::aws:policy/service-role/AmazonSSMAutomationRole
+      Policies:
+        - PolicyName: EventBridgeRolePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ssm:StartAutomationExecution
+                Resource:
+                  - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:automation-definition/${Document}:*"
+              #- Effect: Allow
+              #  Action:
+              #    - ssm:SendCommand
+              #  Resource:
+              #    - !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
+              #    - !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:document/${Document}"
+              - Effect: Allow
+                Action:
+                  #- "*"
+                  #- ec2:CreateImage
+                  #- ec2:DescribeInstances
+                  - iam:PassRole
+                Resource:
+                  - !Ref DocumentRoleArn
