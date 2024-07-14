@@ -34,11 +34,11 @@ Resources:
                 - "{{InstanceId}}"
               Parameters:
                 commands:
-                  - !Sub "sudo aws s3 cp /var/log/messages s3://${Bucket}/{{InstanceId}}/messages"
+                  - !Sub "sudo aws s3 cp /var/log/messages s3://${Bucket}/{{InstanceId}}/"
       DocumentFormat: YAML
       DocumentType: Automation
       Name: !Sub "${Prefix}-document"
-      TargetType: /
+      TargetType: /AWS::EC2::Instance
 
   DocumentRole:
     Type: AWS::IAM::Role
