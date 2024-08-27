@@ -8,18 +8,9 @@ Parameters:
   Prefix:
     Type: String
     Default: soa-05-005
-    
-  #CidrIp1:
-  #  Type: String
-  #  Default: 10.0.1.0/24
-  #  
-  #CidrIp2:
-  #  Type: String
-  #  Default: 10.0.2.0/24
-        
+
   InstanceImageId:
     Type: String
-    #Default: /aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-arm64-gp2
     Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
     
   InstanceType:
@@ -29,11 +20,7 @@ Parameters:
   HTTPPort:
     Type: Number
     Default: 80
-    
-  #HTTPSPort:
-  #  Type: Number
-  #  Default: 443
-  
+
   LambdaArchitecture:
     Type: String
     Default: arm64
@@ -59,81 +46,28 @@ Resources:
       Parameters:
         AvailabilityZone1: a
         AvailabilityZone2: d
-        #CidrIp1: !Ref CidrIp1
-        #CidrIp2: !Ref CidrIp2
         CidrIp1: 10.0.1.0/24
         CidrIp2: 10.0.2.0/24
-        #CidrIp3: 10.0.3.0/24
-        #CidrIp4: 10.0.4.0/24
         HTTPPort: !Ref HTTPPort
-        #HTTPSPort: !Ref HTTPSPort
-        #MySQLPort: !Ref MySQLPort
         Prefix: !Ref Prefix
         VPCCidrBlock: 10.0.0.0/16
         VXLANPort: !Ref VXLANPort
-        
-  #EndpointStack:
-  #  Type: AWS::CloudFormation::Stack
-  #  DependsOn:
-  #    - VPCStack1
-  #  Properties:
-  #    TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-endpoint.yaml"
-  #    Parameters:
-  #      EndpointSecurityGroup: !GetAtt VPCStack1.Outputs.EndpointSecurityGroup
-  #      #Prefix: !Ref Prefix
-  #      PrivateRouteTable: !GetAtt VPCStack1.Outputs.PrivateRouteTable
-  #      PrivateSubnet1: !GetAtt VPCStack1.Outputs.PrivateSubnet1
-  #      PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
-  #      VPC: !GetAtt VPCStack1.Outputs.VPC
-        
+
   EC2Stack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
-      #- IoTStack2
-      #- SSMStack
       - VPCStack1
-      #- EndpointStack
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-ec2.yaml"
       Parameters:
-        #Architecture: !Ref LambdaArchitecture
-        #Authorizer: !GetAtt IoTStack.Outputs.Authorizer
-        #BucketName: !GetAtt S3Stack.Outputs.BucketName
-        #CertificateDir: !Ref IoTCertificateDir
-        #CertificateName: !Ref IoTCertificateName
-        #ClientName: !Ref ClientName
-        #DBInstanceEndpointAddress: !GetAtt RDSStack.Outputs.DBInstanceEndpointAddress
-        #DBMasterUsername: !Ref DBMasterUsername
-        #DBMasterUserPassword: !Ref DBMasterUserPassword
-        #DBName: !Ref DBName
-        #Handler: !Ref LambdaHandler
         ImageId: !Ref InstanceImageId
         InstanceSecurityGroup1: !GetAtt VPCStack1.Outputs.InstanceSecurityGroup1
         InstanceSecurityGroup2: !GetAtt VPCStack1.Outputs.InstanceSecurityGroup2
         InstanceType: !Ref InstanceType
-        #IoTEndpoint: !GetAtt LambdaStack.Outputs.IoTEndpoint
-        #ParameterAmi: !GetAtt LambdaStack1.Outputs.ParameterAmi
-        #ParameterWaitConditionHandleSignalUrl: !GetAtt LambdaStack2.Outputs.ParameterWaitConditionHandleSignalUrl
-        #Policy: !GetAtt IoTStack1.Outputs.Policy
         Prefix: !Ref Prefix
-        #PrivateKeyName: !Ref IoTPrivateKeyName
-        #PublicKeyName: !Ref IoTPublicKeyName
-        #PrivateSubnet1: !GetAtt VPCStack1.Outputs.PrivateSubnet1
-        #PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2
         PublicSubnet1: !GetAtt VPCStack1.Outputs.PublicSubnet1
         PublicSubnet2: !GetAtt VPCStack1.Outputs.PublicSubnet2
-        #Runtime: !Ref LambdaRuntime
-        #Thing: !GetAtt IoTStack1.Outputs.Thing
-        #TopicName: !Ref TopicName
-        #UserData: !Base64 |
-        #  #!/bin/bash -xe
-        #  yum update -y
-        #  yum install -y httpd
-        #  systemctl start httpd
-        #  systemctl enable httpd
-        #  ec2-metadata -i > /var/www/html/index.html
-        #WaitConditionTimeout: !Ref WaitConditionTimeout
-        
+
   LambdaStack:
     Type: AWS::CloudFormation::Stack
     DependsOn:
@@ -144,7 +78,6 @@ Resources:
         Architecture: !Ref LambdaArchitecture
         Handler: !Ref LambdaHandler
         Prefix: !Ref Prefix
-        #ProdBucketArn: !GetAtt ProdS3Stack1.Outputs.BucketArn
         Runtime: !Ref LambdaRuntime
         SourceInstance: !GetAtt EC2Stack.Outputs.SourceInstance
         TargetInstance: !GetAtt EC2Stack.Outputs.TargetInstance
@@ -156,8 +89,6 @@ Resources:
     Properties:
       TemplateURL: !Sub "https://${TemplateBucketName}.s3.${AWS::Region}.amazonaws.com/${Prefix}/${Prefix}-vpc-02.yaml"
       Parameters:
-        #CidrIp1: !Ref CidrIp1
-        #CidrIp2: !Ref CidrIp2
         HTTPPort: !Ref HTTPPort
         SourceNetworkInterfaceId: !GetAtt LambdaStack.Outputs.SourceNetworkInterfaceId
         TargetNetworkInterfaceId: !GetAtt LambdaStack.Outputs.TargetNetworkInterfaceId
