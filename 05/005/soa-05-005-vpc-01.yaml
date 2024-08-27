@@ -1,0 +1,179 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  AvailabilityZone1:
+    Type: String
+    
+  AvailabilityZone2:
+    Type: String
+    
+  CidrIp1:
+    Type: String
+    
+  CidrIp2:
+    Type: String
+    
+  HTTPPort:
+    Type: Number
+    
+  #HTTPSPort:
+  #  Type: Number
+    
+  Prefix:
+    Type: String
+    
+  VPCCidrBlock:
+    Type: String
+    
+  VXLANPort:
+    Type: Number
+
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+
+  IGW:
+    Type: AWS::EC2::InternetGateway
+  
+  IGWAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+      
+      
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp1
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone1}"
+      
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      CidrBlock: !Ref CidrIp2
+      VpcId: !Ref VPC
+      AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      
+  #PrivateSubnet1:
+  #  Type: AWS::EC2::Subnet
+  #  Properties:
+  #    CidrBlock: !Ref CidrIp2
+  #    VpcId: !Ref VPC
+  #    AvailabilityZone: !Sub "${AWS::Region}${AvailabilityZone2}"
+      
+      
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      
+  #PrivateRouteTable:
+  #  Type: AWS::EC2::RouteTable
+  #  Properties:
+  #    VpcId: !Ref VPC
+      
+  RouteToInternet:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+  
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+      
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+          
+          
+  InstanceSecurityGroup1:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-sg-01"
+      #GroupDescription: Allow HTTP from ALBSecurityGroup.
+      GroupDescription: allow http.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        #- IpProtocol: tcp
+        #  FromPort: !Ref HTTPPort
+        #  ToPort: !Ref HTTPPort
+        #  SourceSecurityGroupId: !Ref ALBSecurityGroup
+        - IpProtocol: tcp
+          FromPort: !Ref HTTPPort
+          ToPort: !Ref HTTPPort
+          CidrIp: 0.0.0.0/0
+          
+  InstanceSecurityGroup2:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: !Sub "${Prefix}-sg-02"
+      #GroupDescription: Allow HTTP from ALBSecurityGroup.
+      GroupDescription: allow all from sg-02.
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: udp
+          FromPort: !Ref VXLANPort
+          ToPort: !Ref VXLANPort
+          SourceSecurityGroupId: !Ref InstanceSecurityGroup1
+        #- IpProtocol: -1
+        #  #FromPort: 0
+        #  #ToPort: 65535
+        #  SourceSecurityGroupId: !Ref InstanceSecurityGroup1
+        #- IpProtocol: tcp
+        #  FromPort: !Ref HTTPPort
+        #  ToPort: !Ref HTTPPort
+        #  CidrIp: 0.0.0.0/0
+        
+  #EndpointSecurityGroup:
+  #  Type: AWS::EC2::SecurityGroup
+  #  Properties:
+  #    GroupName: !Sub "${Prefix}-sg-03"
+  #    GroupDescription: Allow HTTPS from InstanceSecurityGroup2.
+  #    VpcId: !Ref VPC
+  #    SecurityGroupIngress:
+  #      - IpProtocol: tcp
+  #        FromPort: !Ref HTTPSPort
+  #        ToPort: !Ref HTTPSPort
+  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup2
+  #      - IpProtocol: tcp
+  #        FromPort: !Ref HTTPSPort
+  #        ToPort: !Ref HTTPSPort
+  #        SourceSecurityGroupId: !Ref InstanceSecurityGroup1
+          
+          
+Outputs:
+  VPC:
+    Value: !Ref VPC
+      
+  PublicSubnet1:
+    Value: !Ref PublicSubnet1
+    
+  PublicSubnet2:
+    Value: !Ref PublicSubnet2
+  
+  #PrivateSubnet1:
+  #  Value: !Ref PrivateSubnet1
+    
+  #PrivateRouteTable:
+  #  Value: !Ref PrivateRouteTable
+    
+  InstanceSecurityGroup1:
+    Value: !Ref InstanceSecurityGroup1
+    
+  InstanceSecurityGroup2:
+    Value: !Ref InstanceSecurityGroup2
+    
+  #EndpointSecurityGroup:
+  #  Value: !Ref EndpointSecurityGroup

@@ -1,0 +1,71 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  #CidrIp1:
+  #  Type: String
+  #  
+  #CidrIp2:
+  #  Type: String
+  
+  HTTPPort:
+    Type: Number
+    
+  SourceNetworkInterfaceId:
+    Type: String
+  
+  TargetNetworkInterfaceId:
+    Type: String
+
+
+Resources:
+  TrafficMirrorFilter:
+    Type: AWS::EC2::TrafficMirrorFilter
+    Properties:
+      #Description: String
+      NetworkServices: 
+        - amazon-dns
+      #Tags: 
+      #  - Tag
+      
+  TrafficMirrorFilterRule:
+    Type: AWS::EC2::TrafficMirrorFilterRule
+    Properties:
+      #Description: String
+      DestinationCidrBlock: 0.0.0.0/0
+      DestinationPortRange: 
+        FromPort: !Ref HTTPPort
+        ToPort: !Ref HTTPPort
+      Protocol: 6
+      RuleAction: accept
+      RuleNumber: 10
+      SourceCidrBlock: 0.0.0.0/0
+      SourcePortRange: 
+        FromPort: 0
+        ToPort: 65535
+      #Tags: 
+      #  - Tag
+      TrafficDirection: ingress
+      TrafficMirrorFilterId: !Ref TrafficMirrorFilter
+    
+  TrafficTarget:
+    Type: AWS::EC2::TrafficMirrorTarget
+    Properties:
+      #Description: String
+      #GatewayLoadBalancerEndpointId: String
+      NetworkInterfaceId: !Ref TargetNetworkInterfaceId
+      #NetworkLoadBalancerArn: String
+      #Tags: 
+      #  - Tag
+      
+  TrafficMirrorSession:
+    Type: AWS::EC2::TrafficMirrorSession
+    Properties:
+      Description: String
+      NetworkInterfaceId: !Ref SourceNetworkInterfaceId
+      #PacketLength: Integer
+      SessionNumber: 10
+      #Tags: 
+      #  - Tag
+      TrafficMirrorFilterId: !Ref TrafficMirrorFilter
+      TrafficMirrorTargetId: !Ref TrafficTarget
+      #VirtualNetworkId: Integer
