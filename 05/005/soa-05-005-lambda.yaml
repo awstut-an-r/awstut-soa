@@ -3,16 +3,10 @@ AWSTemplateFormatVersion: 2010-09-09
 Parameters:
   Architecture:
     Type: String
-    
-  #BucketArn:
-  #  Type: String
-    
+
   Handler:
     Type: String
-    
-  #MemorySize:
-  #  Type: Number
-    
+
   Prefix:
     Type: String
     
@@ -30,16 +24,12 @@ Resources:
   CustomResource1:
     Type: Custom::CustomResource
     Properties:
-      #BucketName: !Ref BucketName
-      #ServiceToken: !GetAtt Function.Arn
       ServiceToken: !GetAtt Function.Arn
       Instance: !Ref SourceInstance
       
   CustomResource2:
     Type: Custom::CustomResource
     Properties:
-      #BucketName: !Ref BucketName
-      #ServiceToken: !GetAtt Function.Arn
       ServiceToken: !GetAtt Function.Arn
       Instance: !Ref TargetInstance
       
@@ -55,7 +45,6 @@ Resources:
           ec2_client = boto3.client('ec2')
            
           CREATE = 'Create'
-          #DELETE = 'Delete'
           response_data = {}
           
           def lambda_handler(event, context):
@@ -68,8 +57,6 @@ Resources:
                     instance_id
                     ]
                   )
-                #print(response)
-                #print(response['Reservations'][0]['Instances'][0]['NetworkInterfaces'][0]['NetworkInterfaceId'])
                 eni_id = response['Reservations'][0]['Instances'][0]['NetworkInterfaces'][0]['NetworkInterfaceId']
                 response_data['NetworkInterfaceId'] = eni_id
               
@@ -78,9 +65,6 @@ Resources:
             except Exception as e:
               print(e)
               cfnresponse.send(event, context, cfnresponse.FAILED, response_data)
-      #Environment:
-      #  Variables:
-      #    BUCKET_NAME: !Ref BucketName
       FunctionName: !Sub "${Prefix}-function"
       Handler: !Ref Handler
       Runtime: !Ref Runtime
@@ -108,27 +92,9 @@ Resources:
                 Action:
                   - ec2:DescribeInstances
                 Resource: "*"
-                  #- !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/${TargetInstance}"
-                  #- !Sub "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:instance/*"
-              #- Effect: Allow
-              #  Action:
-              #    - s3:ListBucket
-              #    - s3:GetObject
-              #    - s3:PutObject
-              #    - s3:DeleteObject
-              #  Resource:
-              #    - !Ref ProdBucketArn
-              #    - !Ref StgBucketArn
-              #    - !Sub "${ProdBucketArn}/*"
-              #    - !Sub "${StgBucketArn}/*"
-                  
+
 
 Outputs:
-  #BucketArn:
-  
-  #FunctionArn:
-  #  Value: !GetAtt Function.Arn
-  
   SourceNetworkInterfaceId:
     Value: !GetAtt CustomResource1.NetworkInterfaceId
   
