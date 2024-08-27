@@ -14,10 +14,7 @@ Parameters:
     
   Prefix:
     Type: String
-    
-  #PrivateSubnet1:
-  #  Type: String
-    
+
   PublicSubnet1:
     Type: String
     
@@ -59,56 +56,12 @@ Resources:
           GroupSet:
             - !Ref InstanceSecurityGroup2
           SubnetId: !Ref PublicSubnet2
-        #- #AssociateCarrierIpAddress: Boolean
-        #  #AssociatePublicIpAddress: true
-        #  #DeleteOnTermination: Boolean
-        #  #Description: String
-        #  DeviceIndex: 0
-        #  #GroupSet: 
-        #  #  - String
-        #  #Ipv6AddressCount: Integer
-        #  #Ipv6Addresses: 
-        #  #  - InstanceIpv6Address
-        #  NetworkInterfaceId: !Ref NetworkInterface
-        #  #PrivateIpAddress: String
-        #  #PrivateIpAddresses: 
-        #  #  - PrivateIpAddressSpecification
-        #  #SecondaryPrivateIpAddressCount: Integer
-        #  #SubnetId: String
       UserData: !Base64
         Fn::Sub: |
           #!/bin/bash -xe
           dnf update -y
           dnf install -y tcpdump
-          
-  #NetworkInterface:
-  #  Type: AWS::EC2::NetworkInterface
-  #  Properties:
-  #    #ConnectionTrackingSpecification: 
-  #    #  ConnectionTrackingSpecification
-  #    #Description: String
-  #    #EnablePrimaryIpv6: Boolean
-  #    GroupSet: 
-  #      - !Ref InstanceSecurityGroup2
-  #    InterfaceType: interface
-  #    #Ipv4PrefixCount: Integer
-  #    #Ipv4Prefixes: 
-  #    #  - Ipv4PrefixSpecification
-  #    #Ipv6AddressCount: Integer
-  #    #Ipv6Addresses: 
-  #    #  - InstanceIpv6Address
-  #    #Ipv6PrefixCount: Integer
-  #    #Ipv6Prefixes: 
-  #    #  - Ipv6PrefixSpecification
-  #    #PrivateIpAddress: String
-  #    #PrivateIpAddresses: 
-  #    #  - PrivateIpAddressSpecification
-  #    #SecondaryPrivateIpAddressCount: Integer
-  #    #SourceDestCheck: Boolean
-  #    SubnetId: !Ref PrivateSubnet1
-  #    #Tags: 
-  #    #  - Tag
-          
+
   InstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
@@ -130,38 +83,6 @@ Resources:
                 - ec2.amazonaws.com
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
-      #Policies:
-      #  - PolicyName: InstancePolicy
-      #    PolicyDocument:
-      #      Version: 2012-10-17
-      #      Statement:
-      #        #- Effect: Allow
-      #        #  Action:
-      #        #    #- ssm:PutParameter
-      #        #    #- iot:AttachPolicy
-      #        #    #- iot:AttachThingPrincipal
-      #        #    #- iot:CreateKeysAndCertificate
-      #        #    #- iot:DescribeEndpoint
-      #        #  Resource:
-      #        #    - "*"
-      #        #    #- !Sub "arn:aws:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${ParameterAmi}"
-      #        - Effect: Allow
-      #          Action:
-      #            #- s3:DeleteObject
-      #            - iot:TestInvokeAuthorizer
-      #            #- s3:ListBucket
-      #          Resource:
-      #            #- !Sub "arn:aws:s3:::${BucketName}"
-      #            #- !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
-      #            - !Sub "arn:aws:iot:${AWS::Region}:${AWS::AccountId}:authorizer/${Authorizer}"
-      #        #- Effect: Allow
-      #        #  Action:
-      #        #    #- s3:DeleteObject
-      #        #    - s3:GetObject
-      #        #    #- s3:ListBucket
-      #        #  Resource:
-      #        #    #- !Sub "arn:aws:s3:::${BucketName}"
-      #        #    - !Sub "arn:aws:s3:::${BucketName}/${Thing}/*"
 
 
 Outputs:
@@ -170,4 +91,3 @@ Outputs:
 
   TargetInstance:
     Value: !Ref TargetInstance
-    
